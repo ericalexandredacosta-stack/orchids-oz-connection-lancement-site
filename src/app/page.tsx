@@ -1,416 +1,249 @@
 "use client";
 
-import { motion, AnimatePresence, useScroll, useTransform, useSpring } from "framer-motion";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { motion } from "framer-motion";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { translations, type Language } from "@/lib/translations";
 import {
-  Briefcase,
-  FileCheck,
-  Home,
-  Shield,
-  Heart,
-  CheckCircle2,
-  MapPin,
-  Mail,
-  ChevronRight,
-  ChevronLeft,
-  Star,
-  MessageCircle,
-  Quote,
-  Globe,
-  Sun,
-  GraduationCap,
-  Car,
-  Compass,
-  Check,
-  X,
-  ArrowRight,
-  ShieldCheck,
-  Zap,
-  Coffee,
-  Phone,
+  MessageCircle, Mail, Globe, Sun, ChevronLeft, ChevronRight,
+  MapPin, Star, Quote, CheckCircle2, ShieldCheck,
+  Briefcase, Home, Car, GraduationCap, FileCheck, Compass,
+  Check, X, ArrowDown, Users, Clock, Zap,
 } from "lucide-react";
 
+/* ─── Hero images ─── */
 const heroImages = [
-  { url: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?q=80&w=2070&auto=format&fit=crop", title: { FR: "Opéra de Sydney", EN: "Sydney Opera House" }, location: "Sydney" },
-  { url: "https://images.unsplash.com/photo-1529108190281-9a4f620bc2d8?q=80&w=2070&auto=format&fit=crop", title: { FR: "Great Ocean Road", EN: "Great Ocean Road" }, location: "Victoria" },
-  { url: "https://images.unsplash.com/photo-1523482580672-f109ba8cb9be?q=80&w=2130&auto=format&fit=crop", title: { FR: "Uluru au coucher du soleil", EN: "Uluru at sunset" }, location: "Northern Territory" },
-  { url: "https://images.unsplash.com/photo-1494233892892-84542a694e72?q=80&w=2070&auto=format&fit=crop", title: { FR: "Grande Barrière de Corail", EN: "Great Barrier Reef" }, location: "Queensland" },
-  { url: "https://images.unsplash.com/photo-1545044846-351ba102b6d5?q=80&w=2074&auto=format&fit=crop", title: { FR: "Plage de Bondi", EN: "Bondi Beach" }, location: "Sydney" },
+  { url: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?q=80&w=1920&auto=format&fit=crop", loc: "Sydney" },
+  { url: "https://images.unsplash.com/photo-1529108190281-9a4f620bc2d8?q=80&w=1920&auto=format&fit=crop", loc: "Victoria" },
+  { url: "https://images.unsplash.com/photo-1523482580672-f109ba8cb9be?q=80&w=1920&auto=format&fit=crop", loc: "Northern Territory" },
+  { url: "https://images.unsplash.com/photo-1545044846-351ba102b6d5?q=80&w=1920&auto=format&fit=crop", loc: "Bondi Beach" },
 ];
 
-const navLinks = [
-  { href: "#accueil", key: "accueil" },
-  { href: "#paul", key: "paul" },
-  { href: "#comment", key: "comment" },
-  { href: "#services", key: "services" },
-  { href: "#temoignages", key: "temoignages" },
-  { href: "#parents", key: "parents" },
-  { href: "#contact", key: "contact" },
+/* ─── Chapter config ─── */
+type Chapter = { id: string; labelFR: string; labelEN: string; orb: string; accent: string };
+const CHAPTERS: Chapter[] = [
+  { id: "hero",    labelFR: "Accueil",     labelEN: "Home",      orb: "rgba(245,158,11,0.13)",  accent: "#f59e0b" },
+  { id: "arrive",  labelFR: "Arrivée",     labelEN: "Arrival",   orb: "rgba(245,158,11,0.10)",  accent: "#f59e0b" },
+  { id: "jobs",    labelFR: "Jobs",        labelEN: "Jobs",      orb: "rgba(16,185,129,0.10)",   accent: "#10b981" },
+  { id: "install", labelFR: "S'installer", labelEN: "Settle in", orb: "rgba(249,115,22,0.10)",   accent: "#f97316" },
+  { id: "visa",    labelFR: "Visa",        labelEN: "Visa",      orb: "rgba(99,102,241,0.10)",   accent: "#6366f1" },
+  { id: "about",   labelFR: "À propos",    labelEN: "About",     orb: "rgba(245,158,11,0.08)",   accent: "#f59e0b" },
+  { id: "contact", labelFR: "Contact",     labelEN: "Contact",   orb: "rgba(245,158,11,0.12)",   accent: "#f59e0b" },
 ];
 
-const fadeInUp = {
-  initial: { opacity: 0, y: 40 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true },
-  transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
-};
-
-const fadeInLeft = {
-  initial: { opacity: 0, x: -40 },
-  whileInView: { opacity: 1, x: 0 },
-  viewport: { once: true },
-  transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
-};
-
-const fadeInRight = {
-  initial: { opacity: 0, x: 40 },
-  whileInView: { opacity: 1, x: 0 },
-  viewport: { once: true },
-  transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
-};
-
-/* ─── Magnetic Card Hook ─── */
-function useMagneticCard() {
+/* ─── Reveal hook ─── */
+function useReveal() {
   const ref = useRef<HTMLDivElement>(null);
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  useEffect(() => {
     if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left - rect.width / 2) / rect.width;
-    const y = (e.clientY - rect.top - rect.height / 2) / rect.height;
-    ref.current.style.transform = `perspective(800px) rotateY(${x * 8}deg) rotateX(${-y * 8}deg) translateZ(10px)`;
-  };
-  const handleMouseLeave = () => {
-    if (!ref.current) return;
-    ref.current.style.transform = "perspective(800px) rotateY(0deg) rotateX(0deg) translateZ(0)";
-  };
-  return { ref, handleMouseMove, handleMouseLeave };
+    const io = new IntersectionObserver(
+      entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add("visible"); }),
+      { threshold: 0.1 }
+    );
+    ref.current.querySelectorAll(".reveal").forEach(el => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+  return ref;
 }
 
+/* ─── Main ─── */
 export default function OZConnectionPage() {
-  const whatsappLink = "https://wa.me/+61494652991";
-  const emailLink = "mailto:contact@ozconnection.com";
+  const wa    = "https://wa.me/+61494652991";
+  const email = "mailto:contact@ozconnection.com";
 
-  const [activeSection, setActiveSection] = useState("accueil");
+  const [lang, setLang]       = useState<Language>("EN");
+  const [slide, setSlide]     = useState(0);
+  const [autoplay, setAuto]   = useState(true);
   const [scrolled, setScrolled] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const [language, setLanguage] = useState<Language>("EN");
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [cursorRingPos, setCursorRingPos] = useState({ x: -100, y: -100 });
-  const [isHovering, setIsHovering] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [activeIdx, setActiveIdx] = useState(0);
 
-  const t = translations[language];
+  const t = translations[lang];
   const serviceIcons = [FileCheck, GraduationCap, Briefcase, Home, Car, Compass];
 
-  // Cursor — both dot and ring use the same lerped position so dot stays centered in ring
+  /* lang */
   useEffect(() => {
-    let lerpX = -100, lerpY = -100;
-    let targetX = -100, targetY = -100;
-    let rafId: number;
-
-    const onMove = (e: MouseEvent) => {
-      targetX = e.clientX;
-      targetY = e.clientY;
-    };
-
-    const loop = () => {
-      lerpX += (targetX - lerpX) * 0.18;
-      lerpY += (targetY - lerpY) * 0.18;
-      setCursorRingPos({ x: lerpX, y: lerpY });
-      rafId = requestAnimationFrame(loop);
-    };
-
-    rafId = requestAnimationFrame(loop);
-    window.addEventListener("mousemove", onMove);
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      cancelAnimationFrame(rafId);
-    };
+    const s = localStorage.getItem("language") as Language;
+    if (s === "FR" || s === "EN") setLang(s);
   }, []);
-
-  useEffect(() => {
-    const interactives = document.querySelectorAll("a, button, [data-hover]");
-    const on = () => setIsHovering(true);
-    const off = () => setIsHovering(false);
-    interactives.forEach(el => { el.addEventListener("mouseenter", on); el.addEventListener("mouseleave", off); });
-    return () => interactives.forEach(el => { el.removeEventListener("mouseenter", on); el.removeEventListener("mouseleave", off); });
-  });
-
-  // Language
-  useEffect(() => {
-    const saved = localStorage.getItem("language") as Language;
-    if (saved === "FR" || saved === "EN") setLanguage(saved);
-  }, []);
-
-  const toggleLanguage = () => {
-    const next = language === "FR" ? "EN" : "FR";
-    setLanguage(next);
-    localStorage.setItem("language", next);
+  const toggleLang = () => {
+    const n = lang === "FR" ? "EN" : "FR";
+    setLang(n); localStorage.setItem("language", n);
   };
 
-  // Hero carousel
-  const nextImage = useCallback(() => setCurrentImageIndex(p => (p + 1) % heroImages.length), []);
-  const prevImage = useCallback(() => setCurrentImageIndex(p => (p - 1 + heroImages.length) % heroImages.length), []);
+  /* hero */
+  const nextSlide = useCallback(() => setSlide(p => (p + 1) % heroImages.length), []);
+  const prevSlide = useCallback(() => setSlide(p => (p - 1 + heroImages.length) % heroImages.length), []);
   useEffect(() => {
-    if (!isAutoPlaying) return;
-    const id = setInterval(nextImage, 6000);
+    if (!autoplay) return;
+    const id = setInterval(nextSlide, 5500);
     return () => clearInterval(id);
-  }, [isAutoPlaying, nextImage]);
+  }, [autoplay, nextSlide]);
 
-  // Scroll
+  /* scroll → orb + progress + active chapter */
   useEffect(() => {
     const onScroll = () => {
       const total = document.body.scrollHeight - window.innerHeight;
-      setScrollProgress((window.scrollY / total) * 100);
-      setScrolled(window.scrollY > 50);
-      const sections = [...navLinks].map(l => l.href.substring(1)).reverse();
-      for (const id of sections) {
-        const el = document.getElementById(id);
-        if (el && el.getBoundingClientRect().top <= 150) { setActiveSection(id); break; }
+      const ratio = total > 0 ? window.scrollY / total : 0;
+      setProgress(ratio * 100);
+      setScrolled(window.scrollY > 60);
+
+      /* active chapter */
+      let found = 0;
+      for (let i = CHAPTERS.length - 1; i >= 0; i--) {
+        const el = document.getElementById(CHAPTERS[i].id);
+        if (el && el.getBoundingClientRect().top <= window.innerHeight * 0.5) { found = i; break; }
       }
+      setActiveIdx(found);
+
+      /* update CSS custom props for orb (no re-render) */
+      const root = document.documentElement;
+      root.style.setProperty("--orb-y", `${10 + ratio * 80}%`);
+      root.style.setProperty("--orb-color", CHAPTERS[found].orb);
     };
-    window.addEventListener("scroll", onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    e.preventDefault();
-    const el = document.getElementById(href.substring(1));
-    if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 80, behavior: "smooth" });
+  const scrollTo = (id: string) =>
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  /* story copy */
+  const story = {
+    FR: {
+      ch1: { eyebrow: "01 — Tu arrives", h: "Perdu dès le premier jour ?", sub: "C'est normal. C'est là qu'on intervient.", body: "Décalage horaire, paperasse, logement à trouver... Arriver sans réseau peut vite devenir un cauchemar. OZ Connection, c'est le contact qu'on aurait voulu avoir à notre arrivée." },
+      ch2: { eyebrow: "02 — Tu veux travailler", h: "On te connecte au bon réseau.", sub: "Pas un CV dans le vide. De vraies connexions locales.", body: "Trouver un job en Australie ça ne marche pas comme en France. Il faut le bon réseau et la bonne approche. On te partage ce qu'on sait, les contacts qui comptent, et on t'aide à éviter les erreurs classiques." },
+      ch3: { eyebrow: "03 — Tu t'installes", h: "Melbourne devient ta ville.", sub: "Logement, transport, quotidien — pour poser vraiment les valises.", body: "Un appartement sans arnaque, un scooter pour explorer, les bonnes adresses... S'installer pour de vrai c'est plus qu'un visa. On te guide sur le terrain qu'on connaît." },
+      ch4: { eyebrow: "04 — Tu veux rester", h: "Ton visa se termine. Et alors ?", sub: "Ce n'est pas une fin. Ça peut être un nouveau départ.", body: "Visa étudiant, travailleur qualifié, partenariat... Des solutions existent. On ne fait pas les visas nous-mêmes, mais on te connecte à notre agent partenaire MARA." },
+    },
+    EN: {
+      ch1: { eyebrow: "01 — You arrive", h: "Lost from day one?", sub: "That's normal. That's exactly where we come in.", body: "Jet lag, paperwork, finding housing... Arriving without a network can quickly turn into a nightmare. OZ Connection is the contact we wish we'd had when we first landed." },
+      ch2: { eyebrow: "02 — You want to work", h: "We connect you to the right network.", sub: "Not a CV thrown into the void. Real local connections.", body: "Finding a job in Australia doesn't work the same as back home. You need the right network and approach. We share what we know, the contacts that matter, and help you avoid classic mistakes." },
+      ch3: { eyebrow: "03 — You settle in", h: "Melbourne becomes your city.", sub: "Housing, transport, daily life — everything to truly settle.", body: "An apartment without scams, a scooter to explore, the best local spots... Truly settling in is more than a visa. We guide you on terrain we know well." },
+      ch4: { eyebrow: "04 — You want to stay", h: "Your visa ends. So what?", sub: "It's not the end. It could be a new beginning.", body: "Student visa, skilled worker, partner visa... Solutions exist. We don't do visas ourselves, but we connect you with our MARA partner agent." },
+    }
   };
+  const S = story[lang];
+
+  /* reveal refs */
+  const r1 = useReveal(), r2 = useReveal(), r3 = useReveal(),
+        r4 = useReveal(), r5 = useReveal(), r6 = useReveal(), r7 = useReveal();
+
+  const accent = CHAPTERS[activeIdx].accent;
 
   return (
-    <div className="min-h-screen bg-white overflow-x-hidden">
-      {/* ── Custom Cursor ── */}
-      <div
-        id="oz-cursor"
-        className={isHovering ? "hovering" : ""}
-        style={{ left: cursorRingPos.x, top: cursorRingPos.y }}
-      />
-      <div
-        id="oz-cursor-ring"
-        className={isHovering ? "hovering" : ""}
-        style={{ left: cursorRingPos.x, top: cursorRingPos.y }}
-      />
+    <div className="min-h-screen bg-white relative">
 
-      {/* ── Scroll Progress Bar ── */}
-      <div id="scroll-progress" style={{ width: `${scrollProgress}%` }} />
+      {/* ── Ambient orb (position driven by CSS vars, zero re-render) ── */}
+      <div id="ambient-orb" aria-hidden="true" />
 
-      {/* ══════════════════════════════ NAV ══════════════════════════════ */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? "py-3 bg-white/85 backdrop-blur-2xl shadow-[0_8px_30px_rgb(0,0,0,0.05)]" : "py-6 bg-transparent"}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <a href="#accueil" onClick={e => scrollToSection(e, "#accueil")} className="flex items-center gap-3 group">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/20 group-hover:shadow-amber-500/50 transition-all duration-500 group-hover:rotate-6 animate-pulse-glow">
-                <Sun className="w-6 h-6 text-white" />
+      {/* ── Scroll progress ── */}
+      <div id="progress-bar" style={{ width: `${progress}%` }} />
+
+      {/* ── Chapter timeline (desktop left) ── */}
+      <div id="chapter-timeline" aria-hidden="true">
+        {CHAPTERS.map((ch, i) => (
+          <div key={ch.id}>
+            <div className={`stop ${activeIdx === i ? "active" : ""}`} onClick={() => scrollTo(ch.id)}>
+              <div className="dot" style={activeIdx === i ? { borderColor: ch.accent, background: ch.accent } : {}} />
+              <span className="label" style={activeIdx === i ? { color: ch.accent } : {}}>
+                {lang === "FR" ? ch.labelFR : ch.labelEN}
+              </span>
+            </div>
+            {i < CHAPTERS.length - 1 && (
+              <div className="line">
+                <div style={{ height: activeIdx > i ? "100%" : "0%", background: ch.accent, width: "100%", transition: "height .5s ease" }} />
               </div>
-              <div className="hidden sm:block">
-                <span className={`font-black text-xl tracking-tight transition-colors duration-500 ${scrolled ? "text-slate-900" : "text-white"}`} style={{ fontFamily: "Outfit, sans-serif" }}>
-                  OZ <span className="text-amber-500">Connection</span>
-                </span>
-                <p className={`text-[10px] uppercase tracking-widest font-bold transition-colors duration-500 ${scrolled ? "text-slate-400" : "text-white/60"}`}>
-                  {t.footer.tagline}
-                </p>
-              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* ══════════════════════════════════════════
+          NAV
+      ══════════════════════════════════════════ */}
+      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-400 ${
+        scrolled ? "bg-white/90 backdrop-blur-xl shadow-[0_1px_0_rgba(0,0,0,0.06)] py-3" : "bg-transparent py-5"
+      }`}>
+        <div className="max-w-7xl mx-auto px-5 flex items-center justify-between">
+          <button onClick={() => scrollTo("hero")} className="flex items-center gap-2.5 group z-10">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md shadow-amber-500/20 group-hover:scale-105 transition-transform">
+              <Sun className="w-5 h-5 text-white" />
+            </div>
+            <span className={`font-black text-lg tracking-tight transition-colors duration-300 ${scrolled ? "text-slate-900" : "text-white"}`} style={{ fontFamily: "Outfit, sans-serif" }}>
+              OZ <span className="text-amber-500">Connection</span>
+            </span>
+          </button>
+
+          <div className="flex items-center gap-3">
+            <button onClick={toggleLang} className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black border transition-all ${
+              scrolled ? "border-slate-200 text-slate-700 hover:bg-slate-50" : "border-white/25 text-white/80 hover:bg-white/10"
+            }`}>
+              <Globe className="w-3.5 h-3.5" />{lang === "FR" ? "EN" : "FR"}
+            </button>
+            <a href={wa} target="_blank" rel="noopener noreferrer"
+              className="hidden sm:flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-900 font-black text-xs uppercase tracking-wider px-5 py-2.5 rounded-full transition-all shadow-md shadow-amber-500/20 btn-shine">
+              <MessageCircle className="w-4 h-4" />
+              {lang === "FR" ? "Nous contacter" : "Contact us"}
             </a>
-
-            {/* Nav links */}
-            <div className={`hidden lg:flex items-center gap-1 p-1 rounded-full transition-all duration-500 ${scrolled ? "bg-slate-100/70" : "bg-white/10 backdrop-blur-md"}`}>
-              {navLinks.map(link => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  onClick={e => scrollToSection(e, link.href)}
-                  className={`px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-300 reveal-line ${
-                    activeSection === link.href.substring(1)
-                      ? "bg-white text-slate-900 shadow-sm active"
-                      : scrolled ? "text-slate-600 hover:text-amber-600 hover:bg-white/50" : "text-white/80 hover:text-white hover:bg-white/10"
-                  }`}
-                  style={{ fontFamily: "Inter, sans-serif" }}
-                >
-                  {t.nav[link.key as keyof typeof t.nav]}
-                </a>
-              ))}
-            </div>
-
-            {/* Right actions */}
-            <div className="flex items-center gap-3">
-              <button
-                onClick={toggleLanguage}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black transition-all duration-500 border ${
-                  scrolled ? "border-slate-200 text-slate-900 hover:bg-slate-50" : "border-white/20 text-white hover:bg-white/10 backdrop-blur-md"
-                }`}
-                style={{ fontFamily: "Inter, sans-serif" }}
-              >
-                <Globe className="w-3.5 h-3.5" />
-                <span>{language === "FR" ? "EN" : "FR"}</span>
-              </button>
-              <a
-                href={whatsappLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hidden sm:flex items-center gap-2 bg-slate-900 text-white px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-amber-500 transition-all duration-500 shadow-lg btn-shine"
-                style={{ fontFamily: "Inter, sans-serif" }}
-              >
-                <MessageCircle className="w-4 h-4" />
-                <span>Connect</span>
-              </a>
-            </div>
           </div>
         </div>
-      </nav>
+      </header>
 
-      {/* ══════════════════════════════ HERO ══════════════════════════════ */}
-      <section id="accueil" className="relative min-h-screen flex items-center overflow-hidden">
-        {/* Carousel */}
-        <div className="absolute inset-0 z-0">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentImageIndex}
-              initial={{ opacity: 0, scale: 1.08 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.04 }}
-              transition={{ duration: 1.8, ease: [0.22, 1, 0.36, 1] }}
-              className="absolute inset-0"
-            >
-              <div
-                className="absolute inset-0 scale-110 transition-transform duration-[12000ms] ease-linear hover:scale-105"
-                style={{ backgroundImage: `url('${heroImages[currentImageIndex].url}')`, backgroundSize: "cover", backgroundPosition: "center" }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-br from-slate-950/75 via-slate-950/40 to-slate-950/70" />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
-            </motion.div>
-          </AnimatePresence>
+      {/* ══════════════════════════════════════════
+          HERO — dark, images CSS-crossfade
+      ══════════════════════════════════════════ */}
+      <section id="hero" className="relative h-screen min-h-[600px] flex items-center overflow-hidden bg-[#080c16]">
+        {heroImages.map((img, i) => (
+          <div key={i} className={`hero-slide${i === slide ? " active" : ""}`}
+            style={{ backgroundImage: `url(${img.url})` }} />
+        ))}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#080c16]/55 via-[#080c16]/25 to-[#080c16]/85 z-10" />
+
+        <div className="relative z-20 max-w-7xl mx-auto px-5 w-full">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.1, ease: [.22, 1, .36, 1], delay: .2 }}
+          >
+            <h1 className="text-6xl sm:text-8xl lg:text-[7rem] font-black text-white leading-[.9] tracking-tight mb-10" style={{ fontFamily: "Outfit, sans-serif" }}>
+              {lang === "FR"
+                ? <><span className="shimmer">Parce qu'on est</span><br />déjà passé par là.</>
+                : <><span className="shimmer">Because we've</span><br />been there too.</>}
+            </h1>
+            <a href={wa} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-2.5 bg-white text-slate-900 font-black text-sm uppercase tracking-wide px-8 py-4 rounded-2xl shadow-xl shadow-black/20 hover:bg-amber-50 transition-colors btn-shine">
+              <MessageCircle className="w-5 h-5 text-emerald-500" />
+              {lang === "FR" ? "Nous contacter" : "Get in touch"}
+            </a>
+          </motion.div>
         </div>
 
-        {/* Floating orbs */}
-        <div className="orb w-[500px] h-[500px] bg-amber-500/15 top-1/4 -left-32 animate-float" style={{ animationDelay: "0s" }} />
-        <div className="orb w-[400px] h-[400px] bg-orange-500/10 bottom-1/4 -right-32 animate-float" style={{ animationDelay: "3s" }} />
-        <div className="orb w-[300px] h-[300px] bg-amber-400/10 top-1/2 left-1/2 animate-float" style={{ animationDelay: "1.5s" }} />
-
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pt-24 pb-10 w-full">
-          <div className="max-w-4xl">
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
-            >
-              <motion.span
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4, duration: 0.6 }}
-                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 backdrop-blur-md text-amber-400 text-[10px] font-black uppercase tracking-[0.25em] mb-8"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                On-the-ground support since 2016
-              </motion.span>
-
-              <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black text-white leading-[0.9] mb-8 tracking-tighter" style={{ fontFamily: "Outfit, sans-serif" }}>
-                {t.hero.title}
-                <br />
-                <span className="text-shimmer">{t.hero.titleAccent}</span>
-              </h1>
-
-              <p className="text-xl sm:text-2xl text-white/85 font-medium mb-12 leading-relaxed max-w-2xl" style={{ fontFamily: "Inter, sans-serif" }}>
-                {t.hero.subtitle}
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4 mb-20">
-                <motion.a
-                  href={whatsappLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  whileHover={{ scale: 1.03, y: -3 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="inline-flex items-center justify-center gap-3 bg-white text-slate-900 px-10 py-5 rounded-2xl text-sm font-black uppercase tracking-widest shadow-[0_20px_60px_rgba(255,255,255,0.15)] hover:shadow-[0_20px_60px_rgba(255,255,255,0.25)] transition-all btn-shine"
-                  style={{ fontFamily: "Inter, sans-serif" }}
-                >
-                  <MessageCircle className="w-5 h-5 text-emerald-500" />
-                  {t.hero.ctaWhatsapp}
-                </motion.a>
-                <motion.a
-                  href="#comment"
-                  onClick={e => scrollToSection(e, "#comment")}
-                  whileHover={{ scale: 1.03, y: -3 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="inline-flex items-center justify-center gap-2 bg-white/10 backdrop-blur-xl text-white border border-white/25 px-10 py-5 rounded-2xl text-sm font-black uppercase tracking-widest transition-all hover:bg-white/20"
-                  style={{ fontFamily: "Inter, sans-serif" }}
-                >
-                  {t.hero.ctaPacks}
-                  <ChevronRight className="w-5 h-5" />
-                </motion.a>
-              </div>
-
-              {/* Stats */}
-              <div className="flex flex-wrap items-center gap-8 sm:gap-16">
-                {[
-                  { value: "8+", label: language === "FR" ? "Ans en Australie" : "Years in Oz" },
-                  { value: "100%", label: language === "FR" ? "Conseil humain" : "Human advice" },
-                  { value: "24h", label: language === "FR" ? "Temps de réponse" : "Response time" },
-                ].map((stat, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.7 + i * 0.1 }}
-                    className="flex flex-col"
-                  >
-                    <span className="text-white font-black text-3xl leading-none" style={{ fontFamily: "Outfit, sans-serif" }}>{stat.value}</span>
-                    <span className="text-white/50 text-[10px] uppercase font-bold tracking-widest mt-1">{stat.label}</span>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          </div>
+        {/* Slide dots only */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2">
+          {heroImages.map((_, i) => (
+            <button key={i} onClick={() => { setSlide(i); setAuto(false); }}
+              className={`rounded-full transition-all duration-500 ${i === slide ? "w-8 h-1.5 bg-amber-500" : "w-1.5 h-1.5 bg-white/30 hover:bg-white/60"}`} />
+          ))}
         </div>
-
-        {/* Carousel controls */}
-        <div className="absolute bottom-10 right-4 sm:right-10 z-20 flex items-center gap-4">
-          <div className="flex items-center gap-2 mr-2">
-            {heroImages.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => { setCurrentImageIndex(i); setIsAutoPlaying(false); }}
-                className={`transition-all duration-500 rounded-full ${i === currentImageIndex ? "w-10 h-2 bg-amber-500" : "w-2 h-2 bg-white/30 hover:bg-white/60"}`}
-              />
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <button onClick={() => { prevImage(); setIsAutoPlaying(false); }} className="w-11 h-11 rounded-full border border-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white hover:text-slate-900 transition-all duration-500">
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <button onClick={() => { nextImage(); setIsAutoPlaying(false); }} className="w-11 h-11 rounded-full border border-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white hover:text-slate-900 transition-all duration-500">
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
+        {/* Scroll hint */}
+        <div className="absolute bottom-8 right-6 z-30">
+          <button onClick={() => scrollTo("arrive")} className="flex flex-col items-center gap-1.5 text-white/30 hover:text-white/60 transition-colors">
+            <ArrowDown className="w-4 h-4 animate-bounce" />
+          </button>
         </div>
-
-        {/* Location tag */}
-        <motion.div
-          key={currentImageIndex}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="absolute bottom-10 left-4 sm:left-10 z-20 flex items-center gap-2 text-white/60 text-xs font-bold uppercase tracking-widest"
-        >
-          <MapPin className="w-3.5 h-3.5 text-amber-400" />
-          {heroImages[currentImageIndex].title[language]} — {heroImages[currentImageIndex].location}
-        </motion.div>
       </section>
 
-      {/* ── Marquee Band ── */}
-      <div className="py-5 bg-amber-500 overflow-hidden relative">
-        <div className="flex animate-marquee whitespace-nowrap">
-          {[...Array(3)].map((_, ri) => (
-            <div key={ri} className="flex items-center gap-8 mr-8">
-              {(language === "FR"
-                ? ["Visa & Migration", "Jobs & Connexions", "Logement", "Études & Écoles", "Transport & Scooter", "Installation longue durée", "Support humain 24h"]
-                : ["Visa & Migration", "Jobs & Connections", "Housing", "Schools & Studies", "Transport & Scooter", "Long-term Settlement", "Human Support 24h"]
+      {/* ── Marquee ── */}
+      <div className="bg-amber-500 py-4 overflow-hidden relative z-10">
+        <div className="flex marquee whitespace-nowrap">
+          {[...Array(4)].map((_, ri) => (
+            <div key={ri} className="flex items-center gap-8 mr-8 shrink-0">
+              {(lang === "FR"
+                ? ["Arrivée & Orientation", "Jobs & Réseau", "Logement", "Transport & Scooter", "Visa & Migration", "Installation longue durée"]
+                : ["Arrival & Orientation", "Jobs & Network", "Housing", "Transport & Scooter", "Visa & Migration", "Long-term Settlement"]
               ).map((item, i) => (
-                <span key={i} className="flex items-center gap-4 text-slate-900 font-black text-sm uppercase tracking-[0.2em]" style={{ fontFamily: "Inter, sans-serif" }}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-900/40" />
-                  {item}
+                <span key={i} className="flex items-center gap-3 text-slate-900 font-black text-sm uppercase tracking-widest">
+                  <span className="w-1 h-1 rounded-full bg-slate-900/40" />{item}
                 </span>
               ))}
             </div>
@@ -418,473 +251,343 @@ export default function OZConnectionPage() {
         </div>
       </div>
 
-      {/* ══════════════════════════════ PAUL / ABOUT ══════════════════════════════ */}
-      <section id="paul" className="py-28 sm:py-36 bg-white relative overflow-hidden">
-        <div className="bg-grid absolute inset-0 opacity-60" />
-        <div className="orb w-96 h-96 bg-amber-400/8 top-0 right-0" />
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative">
-          <div className="grid lg:grid-cols-12 gap-16 items-center">
-            {/* Visual */}
-            <motion.div {...fadeInLeft} className="lg:col-span-5 relative">
-              <div className="relative aspect-[4/5] rounded-[3rem] overflow-hidden shadow-[0_60px_120px_-20px_rgba(0,0,0,0.12)] group card-tilt">
-                <img
-                  src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop"
-                  alt="Paul and backpackers"
-                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                <div className="absolute bottom-8 left-8 right-8">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl border-2 border-amber-400 overflow-hidden shadow-xl">
-                      <img src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=100&auto=format&fit=crop" alt="Paul" className="w-full h-full object-cover" />
-                    </div>
-                    <div>
-                      <h4 className="text-white font-black text-xl" style={{ fontFamily: "Outfit, sans-serif" }}>Paul</h4>
-                      <p className="text-amber-400 text-[10px] uppercase font-bold tracking-widest">Founder · 8 years in Oz</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Floating card */}
-              <motion.div
-                initial={{ opacity: 0, x: 30, y: 30 }}
-                whileInView={{ opacity: 1, x: 0, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.5, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                className="absolute -bottom-8 -right-8 bg-white p-6 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.1)] hidden sm:flex items-center gap-4 border border-slate-50"
-              >
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white shadow-lg shadow-amber-500/30">
-                  <Zap className="w-7 h-7" />
-                </div>
-                <div>
-                  <div className="text-slate-900 font-black text-2xl leading-none" style={{ fontFamily: "Outfit, sans-serif" }}>24h</div>
-                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">First Response</p>
-                </div>
-              </motion.div>
-            </motion.div>
-
-            {/* Content */}
-            <motion.div {...fadeInRight} className="lg:col-span-7">
-              <span className="inline-block px-4 py-1.5 rounded-full bg-amber-500/10 text-amber-600 text-[10px] font-black uppercase tracking-[0.2em] mb-6">
-                {t.paul.badge}
-              </span>
-              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 mb-8 leading-[1.05] tracking-tight" style={{ fontFamily: "Outfit, sans-serif" }}>
-                {t.paul.title} <span className="text-shimmer">{t.paul.titleAccent}</span>
+      {/* ══════════════════════════════════════════
+          CHAPTER 1 — ARRIVÉE
+      ══════════════════════════════════════════ */}
+      <section id="arrive" className="relative py-28 overflow-hidden bg-white">
+        <span className="watermark text-amber-500">01</span>
+        <div className="max-w-7xl mx-auto px-5 relative z-10" ref={r1}>
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <p className="reveal text-xs font-black uppercase tracking-[.25em] text-amber-500 mb-4">{S.ch1.eyebrow}</p>
+              <h2 className="reveal reveal-delay-1 text-4xl sm:text-6xl font-black text-slate-900 leading-[.96] tracking-tight mb-4" style={{ fontFamily: "Outfit, sans-serif" }}>
+                {S.ch1.h}
               </h2>
-              <div className="space-y-5 text-slate-600 text-lg leading-relaxed mb-10" style={{ fontFamily: "Inter, sans-serif" }}>
-                <p className="text-slate-900 font-bold text-xl leading-snug">{t.paul.greeting}</p>
-                <p>{t.paul.p1}</p>
-                <p>{t.paul.p2}</p>
-                <div className="relative p-8 rounded-3xl bg-gradient-to-br from-slate-50 to-white border border-slate-100 shadow-sm overflow-hidden">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-amber-400 to-orange-500 rounded-l-3xl" />
-                  <Quote className="w-10 h-10 text-amber-100 mb-3" />
-                  <p className="text-slate-700 italic font-medium leading-relaxed">{t.paul.p3}</p>
+              <p className="reveal reveal-delay-2 text-lg text-amber-600 font-semibold mb-5 chapter-accent-left" style={{ borderColor: "#f59e0b" }}>{S.ch1.sub}</p>
+              <p className="reveal reveal-delay-2 text-slate-500 text-lg leading-relaxed mb-10">{S.ch1.body}</p>
+              <a href={wa} target="_blank" rel="noopener noreferrer"
+                className="reveal reveal-delay-3 inline-flex items-center gap-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 font-black text-sm uppercase tracking-wide px-8 py-4 rounded-2xl transition-all shadow-lg shadow-amber-500/20 btn-shine">
+                <MessageCircle className="w-5 h-5" />
+                {lang === "FR" ? "On discute ?" : "Let's talk"}
+              </a>
+            </div>
+            <div className="reveal reveal-delay-2 grid grid-cols-2 gap-4">
+              {[
+                { icon: Clock, title: lang === "FR" ? "Réponse sous 24h" : "Reply within 24h",      sub: lang === "FR" ? "On est là"            : "We're here" },
+                { icon: MapPin, title: lang === "FR" ? "À Melbourne"      : "In Melbourne",          sub: lang === "FR" ? "Sur le terrain"        : "On the ground" },
+                { icon: Users, title: lang === "FR" ? "Équipe locale"     : "Local team",            sub: lang === "FR" ? "8 ans d'expérience"    : "8 years experience" },
+                { icon: Zap,   title: lang === "FR" ? "1er échange gratuit" : "Free first chat",     sub: lang === "FR" ? "Sans engagement"       : "No commitment" },
+              ].map(({ icon: Icon, title, sub }, i) => (
+                <div key={i} className="card-lift bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
+                  <div className="w-11 h-11 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500 mb-4">
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <p className="font-black text-slate-900 text-sm leading-tight" style={{ fontFamily: "Outfit, sans-serif" }}>{title}</p>
+                  <p className="text-slate-400 text-xs mt-1">{sub}</p>
                 </div>
-              </div>
-
-              <div className="grid sm:grid-cols-2 gap-4">
-                <motion.div
-                  whileHover={{ y: -4, scale: 1.01 }}
-                  className="bg-gradient-to-br from-emerald-50 to-teal-50 p-6 rounded-3xl border border-emerald-100 group transition-all duration-500 shadow-sm hover:shadow-lg hover:shadow-emerald-500/10"
-                >
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-500 flex items-center justify-center text-white mb-4 shadow-lg shadow-emerald-500/25 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
-                    <Check className="w-6 h-6" />
-                  </div>
-                  <h4 className="font-black text-slate-900 mb-2 uppercase text-xs tracking-widest">{t.paul.whatWeDo}</h4>
-                  <p className="text-slate-600 text-sm leading-relaxed">{t.paul.whatWeDoDesc}</p>
-                </motion.div>
-
-                <motion.div
-                  whileHover={{ y: -4, scale: 1.01 }}
-                  className="bg-gradient-to-br from-slate-50 to-slate-100 p-6 rounded-3xl border border-slate-200 group transition-all duration-500 shadow-sm hover:shadow-lg hover:shadow-slate-500/10"
-                >
-                  <div className="w-12 h-12 rounded-2xl bg-slate-400 flex items-center justify-center text-white mb-4 shadow-lg shadow-slate-400/25 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
-                    <X className="w-6 h-6" />
-                  </div>
-                  <h4 className="font-black text-slate-900 mb-2 uppercase text-xs tracking-widest">{t.paul.whatWeDontDo}</h4>
-                  <p className="text-slate-600 text-sm leading-relaxed">{t.paul.whatWeDontDoDesc}</p>
-                </motion.div>
-              </div>
-            </motion.div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ══════════════════════════════ HOW IT WORKS ══════════════════════════════ */}
-      <section id="comment" className="py-28 sm:py-36 bg-slate-950 relative overflow-hidden">
-        <div className="orb w-[600px] h-[600px] bg-amber-500/10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-        <div className="bg-dots absolute inset-0 opacity-30" />
+      {/* ── thin divider ── */}
+      <div className="h-px bg-gradient-to-r from-transparent via-slate-100 to-transparent mx-5" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
-          <motion.div {...fadeInUp} className="text-center max-w-3xl mx-auto mb-20">
-            <span className="inline-block px-4 py-1.5 rounded-full bg-white/10 text-white/70 text-[10px] font-black uppercase tracking-[0.2em] mb-6">
-              {t.howItWorks.badge}
-            </span>
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-6 tracking-tight" style={{ fontFamily: "Outfit, sans-serif" }}>
-              {t.howItWorks.title} <span className="text-shimmer">{t.howItWorks.titleAccent}</span>
-            </h2>
-            <p className="text-white/50 text-lg" style={{ fontFamily: "Inter, sans-serif" }}>
-              {t.howItWorks.subtitle}
-            </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 relative">
-            {/* Connector line */}
-            <div className="hidden lg:block absolute top-14 left-[12.5%] right-[12.5%] h-px bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
-
-            {t.howItWorks.steps.map((step, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] }}
-                whileHover={{ y: -8, transition: { duration: 0.3 } }}
-                className="relative z-10 group"
-              >
-                <div className="bg-white/5 backdrop-blur-sm rounded-[2rem] p-8 border border-white/10 hover:border-amber-500/30 hover:bg-white/8 transition-all duration-500 h-full">
-                  <div className="w-14 h-14 rounded-2xl bg-slate-900 border border-white/10 text-amber-400 flex items-center justify-center font-black text-xl mb-6 shadow-xl group-hover:bg-amber-500 group-hover:text-white group-hover:border-amber-500 group-hover:scale-110 transition-all duration-500">
-                    {step.number}
-                  </div>
-                  <h3 className="text-white font-black text-xl mb-4 leading-tight" style={{ fontFamily: "Outfit, sans-serif" }}>
-                    {step.title}
-                  </h3>
-                  <p className="text-white/50 text-sm leading-relaxed group-hover:text-white/70 transition-colors duration-500" style={{ fontFamily: "Inter, sans-serif" }}>
-                    {step.desc}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          <motion.div {...fadeInUp} className="mt-16 text-center">
-            <motion.a
-              href={whatsappLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              whileHover={{ scale: 1.03, y: -3 }}
-              whileTap={{ scale: 0.97 }}
-              className="inline-flex items-center gap-4 bg-emerald-500 text-white px-10 py-5 rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl shadow-emerald-500/30 hover:bg-emerald-400 transition-all btn-shine"
-              style={{ fontFamily: "Inter, sans-serif" }}
-            >
-              <MessageCircle className="w-6 h-6" />
-              {t.howItWorks.cta}
-            </motion.a>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════ SERVICES ══════════════════════════════ */}
-      <section id="services" className="py-28 sm:py-36 bg-white relative overflow-hidden">
-        <div className="bg-grid absolute inset-0 opacity-50" />
-        <div className="orb w-80 h-80 bg-orange-400/8 top-20 right-0" />
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative">
-          <motion.div {...fadeInUp} className="mb-20">
-            <span className="inline-block px-4 py-1.5 rounded-full bg-amber-500/10 text-amber-600 text-[10px] font-black uppercase tracking-[0.2em] mb-6">
-              {t.services.badge}
-            </span>
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-              <div className="max-w-2xl">
-                <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 mb-6 tracking-tight leading-[1.05]" style={{ fontFamily: "Outfit, sans-serif" }}>
-                  {t.services.title} <span className="text-shimmer">{t.services.titleAccent}</span>
-                </h2>
-                <p className="text-slate-500 text-lg" style={{ fontFamily: "Inter, sans-serif" }}>{t.services.subtitle}</p>
-              </div>
-              <div className="hidden lg:flex items-center gap-4 p-3 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm">
-                <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
-                  <ShieldCheck className="w-6 h-6" />
-                </div>
-                <div className="pr-4">
-                  <div className="text-slate-900 font-bold text-xs uppercase tracking-widest">Verified Support</div>
-                  <p className="text-slate-400 text-[10px] font-medium">Official Partners Only</p>
+      {/* ══════════════════════════════════════════
+          CHAPTER 2 — JOBS
+      ══════════════════════════════════════════ */}
+      <section id="jobs" className="relative py-28 overflow-hidden section-alt">
+        <span className="watermark text-emerald-500">02</span>
+        <div className="max-w-7xl mx-auto px-5 relative z-10" ref={r2}>
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div className="reveal order-last lg:order-first">
+              <div className="relative rounded-[2.5rem] overflow-hidden aspect-[4/3] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.12)]">
+                <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?q=80&w=1200&auto=format&fit=crop"
+                  alt="Team at work" loading="lazy" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/50 to-transparent" />
+                <div className="absolute bottom-6 left-6 glass-white rounded-2xl px-4 py-3">
+                  <p className="text-slate-900 font-black text-sm">🌿 Melbourne CBD</p>
+                  <p className="text-slate-500 text-xs">{lang === "FR" ? "Réseau local actif" : "Active local network"}</p>
                 </div>
               </div>
             </div>
-          </motion.div>
+            <div>
+              <p className="reveal text-xs font-black uppercase tracking-[.25em] text-emerald-600 mb-4">{S.ch2.eyebrow}</p>
+              <h2 className="reveal reveal-delay-1 text-4xl sm:text-6xl font-black text-slate-900 leading-[.96] tracking-tight mb-4" style={{ fontFamily: "Outfit, sans-serif" }}>
+                {S.ch2.h}
+              </h2>
+              <p className="reveal reveal-delay-2 text-lg text-emerald-600 font-semibold mb-5 chapter-accent-left" style={{ borderColor: "#10b981" }}>{S.ch2.sub}</p>
+              <p className="reveal reveal-delay-2 text-slate-500 text-lg leading-relaxed mb-8">{S.ch2.body}</p>
+              <div className="reveal reveal-delay-3 space-y-3 mb-10">
+                {(lang === "FR"
+                  ? ["Conseils personnalisés pour ta recherche d'emploi", "Mise en relation avec notre réseau local à Melbourne", "Infos sur les secteurs qui recrutent en ce moment"]
+                  : ["Personalised job search advice", "Introductions to our local Melbourne network", "Info on sectors currently hiring"]
+                ).map((item, i) => (
+                  <div key={i} className="flex items-start gap-3 text-slate-600 text-sm">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />{item}
+                  </div>
+                ))}
+              </div>
+              <a href={wa} target="_blank" rel="noopener noreferrer"
+                className="reveal reveal-delay-4 inline-flex items-center gap-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm uppercase tracking-wide px-8 py-4 rounded-2xl transition-all shadow-lg shadow-emerald-600/20 btn-shine">
+                <MessageCircle className="w-5 h-5" />
+                {lang === "FR" ? "Trouver un job" : "Find a job"}
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="h-px bg-gradient-to-r from-transparent via-slate-100 to-transparent mx-5" />
+
+      {/* ══════════════════════════════════════════
+          CHAPTER 3 — S'INSTALLER
+      ══════════════════════════════════════════ */}
+      <section id="install" className="relative py-28 overflow-hidden bg-white">
+        <span className="watermark text-orange-400">03</span>
+        <div className="max-w-7xl mx-auto px-5 relative z-10" ref={r3}>
+          <div className="max-w-3xl mx-auto text-center mb-16">
+            <p className="reveal text-xs font-black uppercase tracking-[.25em] text-orange-500 mb-4">{S.ch3.eyebrow}</p>
+            <h2 className="reveal reveal-delay-1 text-4xl sm:text-6xl font-black text-slate-900 leading-[.96] tracking-tight mb-4" style={{ fontFamily: "Outfit, sans-serif" }}>
+              {S.ch3.h}
+            </h2>
+            <p className="reveal reveal-delay-2 text-lg text-orange-600 font-semibold mb-5">{S.ch3.sub}</p>
+            <p className="reveal reveal-delay-2 text-slate-500 text-lg leading-relaxed">{S.ch3.body}</p>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {t.services.items.map((item, i) => {
               const Icon = serviceIcons[i];
               return (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: i * 0.09, ease: [0.22, 1, 0.36, 1] }}
-                  whileHover={{ y: -8, transition: { duration: 0.3 } }}
-                  className="group relative bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm hover:shadow-[0_40px_80px_-15px_rgba(0,0,0,0.10)] transition-all duration-600 flex flex-col overflow-hidden"
-                >
-                  {/* Background gradient on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-amber-500/0 to-orange-500/0 group-hover:from-amber-500/3 group-hover:to-orange-500/3 transition-all duration-700 rounded-[2.5rem]" />
-
-                  <div className="w-16 h-16 rounded-[1.25rem] bg-slate-50 flex items-center justify-center text-slate-800 mb-8 group-hover:bg-gradient-to-br group-hover:from-amber-400 group-hover:to-orange-500 group-hover:text-white transition-all duration-500 group-hover:rotate-6 group-hover:scale-110 shadow-sm group-hover:shadow-xl group-hover:shadow-amber-500/25 relative z-10">
-                    <Icon className="w-8 h-8" />
+                <div key={i} className={`reveal card-lift bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm reveal-delay-${Math.min(i + 1, 4)}`}>
+                  <div className="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center text-orange-500 mb-6">
+                    <Icon className="w-6 h-6" />
                   </div>
-                  <h3 className="text-2xl font-black text-slate-900 mb-4 tracking-tight relative z-10" style={{ fontFamily: "Outfit, sans-serif" }}>
-                    {item.title}
-                  </h3>
-                  <p className="text-slate-500 text-sm leading-relaxed mb-8 flex-grow relative z-10" style={{ fontFamily: "Inter, sans-serif" }}>
-                    {item.desc}
-                  </p>
-                  <div className="pt-6 border-t border-slate-50 flex items-center justify-between group-hover:border-amber-100 transition-colors relative z-10">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-amber-500 transition-colors">{language === "FR" ? "En savoir plus" : "Learn More"}</span>
-                    <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-amber-500 group-hover:translate-x-2 transition-all duration-500" />
-                  </div>
-                </motion.div>
+                  <h3 className="font-black text-slate-900 text-xl mb-3" style={{ fontFamily: "Outfit, sans-serif" }}>{item.title}</h3>
+                  <p className="text-slate-500 text-sm leading-relaxed">{item.desc}</p>
+                </div>
               );
             })}
           </div>
-
-          <motion.div {...fadeInUp} className="mt-12 p-8 bg-gradient-to-r from-slate-900 to-slate-800 rounded-[2.5rem] flex flex-col sm:flex-row items-center justify-center gap-6">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
-            <p className="text-white/70 text-sm font-medium text-center sm:text-left leading-relaxed" style={{ fontFamily: "Inter, sans-serif" }}>
-              <span className="text-amber-400 font-bold block mb-1 uppercase tracking-widest text-[10px]">Important Notice</span>
-              {t.services.disclaimer}
-            </p>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════ GALLERY ══════════════════════════════ */}
-      <section className="py-28 sm:py-36 bg-slate-50 relative overflow-hidden">
-        <div className="orb w-[500px] h-[500px] bg-amber-500/8 bottom-0 left-0" />
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative">
-          <motion.div {...fadeInUp} className="text-center mb-20">
-            <span className="inline-block px-4 py-1.5 rounded-full bg-slate-200 text-slate-700 text-[10px] font-black uppercase tracking-[0.2em] mb-6">
-              {t.gallery.badge}
-            </span>
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 mb-6 tracking-tight" style={{ fontFamily: "Outfit, sans-serif" }}>
-              {t.gallery.title} <span className="text-shimmer">{t.gallery.titleAccent}</span>
-            </h2>
-            <p className="text-slate-500 text-lg max-w-2xl mx-auto" style={{ fontFamily: "Inter, sans-serif" }}>
-              {t.gallery.subtitle}
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {[
-              { url: "https://images.unsplash.com/photo-1546268060-2592ff93ee24?q=80&w=2070&auto=format&fit=crop", label: t.gallery.items.roadTrips },
-              { url: "https://images.unsplash.com/photo-1507699622108-4be3abd695ad?q=80&w=2071&auto=format&fit=crop", label: t.gallery.items.surf },
-              { url: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=2070&auto=format&fit=crop", label: t.gallery.items.diving },
-              { url: "https://images.unsplash.com/photo-1530789253388-582c481c54b0?q=80&w=2070&auto=format&fit=crop", label: t.gallery.items.nature },
-            ].map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, scale: 0.92 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.7, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
-                whileHover={{ y: -10, transition: { duration: 0.35 } }}
-                className="group relative aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_-15px_rgba(0,0,0,0.12)] cursor-pointer"
-              >
-                <img src={item.url} alt={item.label} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1200 ease-out" />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/0 to-orange-600/0 group-hover:from-amber-500/20 group-hover:to-orange-600/20 transition-all duration-700" />
-                <div className="absolute bottom-0 left-0 right-0 p-8 translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
-                  <h4 className="text-white font-black text-xl tracking-tight" style={{ fontFamily: "Outfit, sans-serif" }}>{item.label}</h4>
-                  <div className="flex items-center gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                    <span className="text-white/60 text-[10px] uppercase font-bold tracking-widest">Australia</span>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+          <div className="reveal reveal-delay-4 text-center mt-12">
+            <a href={wa} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-2.5 bg-orange-500 hover:bg-orange-400 text-white font-black text-sm uppercase tracking-wide px-8 py-4 rounded-2xl transition-all shadow-lg shadow-orange-500/20 btn-shine">
+              <MessageCircle className="w-5 h-5" />
+              {lang === "FR" ? "S'installer" : "Settle in"}
+            </a>
+          </div>
+          <div className="reveal mt-8 p-5 bg-slate-50 rounded-2xl border border-slate-100 flex gap-3 items-start max-w-3xl mx-auto">
+            <ShieldCheck className="w-5 h-5 text-orange-400 shrink-0 mt-0.5" />
+            <p className="text-slate-400 text-sm leading-relaxed">{t.services.disclaimer}</p>
           </div>
         </div>
       </section>
 
-      {/* ══════════════════════════════ TESTIMONIALS ══════════════════════════════ */}
-      <section id="temoignages" className="py-28 sm:py-36 bg-white relative overflow-hidden">
-        <div className="bg-dots absolute inset-0 opacity-40" />
+      <div className="h-px bg-gradient-to-r from-transparent via-slate-100 to-transparent mx-5" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative">
-          <motion.div {...fadeInUp} className="text-center mb-20">
-            <span className="inline-block px-4 py-1.5 rounded-full bg-amber-500/10 text-amber-600 text-[10px] font-black uppercase tracking-[0.2em] mb-6">
-              {t.testimonials.badge}
-            </span>
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 mb-6 tracking-tight" style={{ fontFamily: "Outfit, sans-serif" }}>
-              {t.testimonials.title} <span className="text-shimmer">{t.testimonials.titleAccent}</span>
-            </h2>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-7">
-            {t.testimonials.items.map((testimonial, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] }}
-                whileHover={{ y: -8, transition: { duration: 0.3 } }}
-                className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm flex flex-col group hover:shadow-[0_40px_80px_-20px_rgba(245,158,11,0.12)] hover:border-amber-100 transition-all duration-500 relative overflow-hidden"
-              >
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-400 to-orange-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left rounded-t-[2.5rem]" />
-
-                <div className="flex gap-1 mb-6">
-                  {[...Array(5)].map((_, si) => (
-                    <Star key={si} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                  ))}
-                </div>
-                <Quote className="w-10 h-10 text-amber-100 mb-5 group-hover:text-amber-200 transition-colors duration-500" />
-                <p className="text-slate-600 mb-10 leading-relaxed italic text-lg flex-grow" style={{ fontFamily: "Inter, sans-serif" }}>
-                  &ldquo;{testimonial.text}&rdquo;
-                </p>
-                <div className="flex items-center gap-4 pt-8 border-t border-slate-50 group-hover:border-amber-50 transition-colors">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-lg shadow-amber-500/20">
-                    {testimonial.name.charAt(0)}
-                  </div>
-                  <div>
-                    <div className="text-slate-900 font-black tracking-tight" style={{ fontFamily: "Outfit, sans-serif" }}>{testimonial.name}</div>
-                    <div className="text-slate-400 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 mt-1">
-                      <MapPin className="w-3 h-3 text-amber-400" />
-                      {(testimonial as any).origin ?? "Australia"}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════ PARENTS ══════════════════════════════ */}
-      <section id="parents" className="py-28 sm:py-36 bg-slate-50 relative overflow-hidden">
-        <div className="orb w-[500px] h-[500px] bg-amber-500/8 top-1/2 -translate-y-1/2 -right-32" />
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative">
-          <div className="grid lg:grid-cols-2 gap-20 items-center">
-            <motion.div {...fadeInLeft} className="relative">
-              <div className="relative aspect-square rounded-[3rem] overflow-hidden shadow-[0_60px_120px_-20px_rgba(0,0,0,0.15)] group card-tilt">
-                <img
-                  src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=2070&auto=format&fit=crop"
-                  alt="Happy young travelers"
-                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/15 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-              </div>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.85 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.5, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                className="absolute -bottom-10 -right-10 bg-white p-8 rounded-[2rem] shadow-[0_30px_60px_rgba(0,0,0,0.10)] border border-slate-50 hidden sm:flex items-center gap-5"
-              >
-                <div className="w-16 h-16 rounded-2xl bg-emerald-500 flex items-center justify-center text-white shadow-xl shadow-emerald-500/30">
-                  <ShieldCheck className="w-8 h-8" />
-                </div>
-                <div>
-                  <div className="text-slate-900 font-black text-xl leading-none mb-2" style={{ fontFamily: "Outfit, sans-serif" }}>{t.parents.secure}</div>
-                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">{t.parents.fieldSupport}</p>
-                </div>
-              </motion.div>
-            </motion.div>
-
-            <motion.div {...fadeInRight}>
-              <span className="inline-block px-4 py-1.5 rounded-full bg-amber-500/10 text-amber-600 text-[10px] font-black uppercase tracking-[0.2em] mb-6">
-                {t.parents.badge}
-              </span>
-              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 mb-8 leading-[1.05] tracking-tight" style={{ fontFamily: "Outfit, sans-serif" }}>
-                {t.parents.title} <br />
-                <span className="text-shimmer">{t.parents.titleAccent}</span>
+      {/* ══════════════════════════════════════════
+          CHAPTER 4 — VISA
+      ══════════════════════════════════════════ */}
+      <section id="visa" className="relative py-28 overflow-hidden section-alt">
+        <span className="watermark text-indigo-400">04</span>
+        <div className="max-w-7xl mx-auto px-5 relative z-10" ref={r4}>
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <p className="reveal text-xs font-black uppercase tracking-[.25em] text-indigo-500 mb-4">{S.ch4.eyebrow}</p>
+              <h2 className="reveal reveal-delay-1 text-4xl sm:text-6xl font-black text-slate-900 leading-[.96] tracking-tight mb-4" style={{ fontFamily: "Outfit, sans-serif" }}>
+                {S.ch4.h}
               </h2>
-              <div className="space-y-5 text-slate-600 text-lg leading-relaxed mb-10" style={{ fontFamily: "Inter, sans-serif" }}>
-                <p className="text-slate-900 font-bold text-xl">{t.parents.p1}</p>
-                <p>{t.parents.p2}</p>
-                <p className="italic text-slate-400">{t.parents.p3}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-4 mb-10">
-                {t.parents.features.map((feature, i) => (
-                  <motion.div
-                    key={i}
-                    whileHover={{ x: 4, transition: { duration: 0.2 } }}
-                    className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-amber-100 transition-all duration-300"
-                  >
-                    <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                    <span className="text-slate-700 text-[10px] font-bold uppercase tracking-widest" style={{ fontFamily: "Inter, sans-serif" }}>{feature}</span>
-                  </motion.div>
+              <p className="reveal reveal-delay-2 text-lg text-indigo-600 font-semibold mb-5 chapter-accent-left" style={{ borderColor: "#6366f1" }}>{S.ch4.sub}</p>
+              <p className="reveal reveal-delay-2 text-slate-500 text-lg leading-relaxed mb-8">{S.ch4.body}</p>
+              <div className="reveal reveal-delay-3 flex flex-wrap gap-2.5 mb-10">
+                {(lang === "FR"
+                  ? ["Visa étudiant", "Travailleur qualifié", "Visa partenaire", "Working Holiday", "Visa tourisme"]
+                  : ["Student visa", "Skilled worker", "Partner visa", "Working Holiday", "Tourist visa"]
+                ).map((v, i) => (
+                  <span key={i} className="bg-indigo-50 text-indigo-700 text-xs font-bold px-4 py-2 rounded-full border border-indigo-100">{v}</span>
                 ))}
               </div>
-              <motion.a
-                href={whatsappLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                whileHover={{ scale: 1.03, y: -3 }}
-                whileTap={{ scale: 0.97 }}
-                className="inline-flex items-center gap-4 bg-slate-900 text-white px-10 py-5 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-slate-900/15 hover:bg-amber-500 hover:shadow-amber-500/25 transition-all duration-500 btn-shine"
-                style={{ fontFamily: "Inter, sans-serif" }}
-              >
-                <MessageCircle className="w-6 h-6" />
-                {t.parents.cta}
-              </motion.a>
-            </motion.div>
+              <a href={wa} target="_blank" rel="noopener noreferrer"
+                className="reveal reveal-delay-4 inline-flex items-center gap-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-sm uppercase tracking-wide px-8 py-4 rounded-2xl transition-all shadow-lg shadow-indigo-600/20 btn-shine">
+                <MessageCircle className="w-5 h-5" />
+                {lang === "FR" ? "Explorer mes options" : "Explore my options"}
+              </a>
+            </div>
+            <div className="reveal reveal-delay-2">
+              <div className="relative rounded-[2.5rem] overflow-hidden aspect-square shadow-[0_30px_60px_-15px_rgba(0,0,0,0.12)]">
+                <img src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=1000&auto=format&fit=crop"
+                  alt="Visa documents" loading="lazy" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/50 to-transparent" />
+                <div className="absolute bottom-6 left-6 right-6 glass-white rounded-2xl px-5 py-4">
+                  <p className="text-slate-900 font-black text-sm mb-0.5">{lang === "FR" ? "Agent partenaire MARA" : "MARA Partner Agent"}</p>
+                  <p className="text-slate-500 text-xs">{lang === "FR" ? "Enregistré officiellement · Melbourne" : "Officially registered · Melbourne"}</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ══════════════════════════════ CONTACT ══════════════════════════════ */}
-      <section id="contact" className="py-28 sm:py-40 bg-slate-950 relative overflow-hidden text-center">
-        <div className="orb w-[700px] h-[700px] bg-amber-500/15 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-        <div className="orb w-[400px] h-[400px] bg-orange-600/10 top-0 right-0" />
-        <div className="orb w-[300px] h-[300px] bg-amber-400/10 bottom-0 left-0" />
-        <div className="bg-dots absolute inset-0 opacity-20" />
+      <div className="h-px bg-gradient-to-r from-transparent via-slate-100 to-transparent mx-5" />
 
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 relative z-10">
-          <motion.div {...fadeInUp}>
-            <motion.div
-              animate={{ y: [0, -10, 0] }}
-              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-              className="w-24 h-24 mx-auto mb-12 rounded-[2rem] bg-white/8 backdrop-blur-xl flex items-center justify-center text-white shadow-2xl border border-white/10"
-            >
-              <Coffee className="w-12 h-12 text-amber-400" />
-            </motion.div>
-
-            <h2 className="text-5xl sm:text-7xl lg:text-8xl font-black text-white mb-8 tracking-tighter leading-[0.88]" style={{ fontFamily: "Outfit, sans-serif" }}>
-              {t.contact.title} <br />
-              <span className="text-shimmer">{t.contact.titleAccent}</span>
-            </h2>
-
-            <p className="text-white/50 text-xl mb-14 max-w-xl mx-auto font-medium" style={{ fontFamily: "Inter, sans-serif" }}>
-              {t.contact.subtitle}
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-              <motion.a
-                href={whatsappLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                whileHover={{ scale: 1.04, y: -4 }}
-                whileTap={{ scale: 0.96 }}
-                className="inline-flex items-center justify-center gap-4 bg-white text-slate-900 px-12 py-6 rounded-3xl text-sm font-black uppercase tracking-[0.2em] shadow-[0_0_60px_rgba(255,255,255,0.1)] hover:shadow-[0_0_80px_rgba(255,255,255,0.2)] transition-all btn-shine"
-                style={{ fontFamily: "Inter, sans-serif" }}
-              >
-                <MessageCircle className="w-6 h-6 text-emerald-500" />
-                {language === "FR" ? "Parler à Paul" : "Talk to Paul"}
-              </motion.a>
-              <motion.a
-                href={emailLink}
-                whileHover={{ scale: 1.04, y: -4 }}
-                whileTap={{ scale: 0.96 }}
-                className="inline-flex items-center justify-center gap-4 bg-white/8 backdrop-blur-xl text-white border border-white/15 px-12 py-6 rounded-3xl text-sm font-black uppercase tracking-[0.2em] hover:bg-white/15 hover:border-white/30 transition-all"
-                style={{ fontFamily: "Inter, sans-serif" }}
-              >
-                <Mail className="w-6 h-6" />
-                Email
-              </motion.a>
+      {/* ══════════════════════════════════════════
+          ABOUT — PAUL
+      ══════════════════════════════════════════ */}
+      <section id="about" className="relative py-28 overflow-hidden bg-white">
+        <div className="max-w-7xl mx-auto px-5 relative z-10" ref={r5}>
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div className="reveal">
+              <div className="relative rounded-[2.5rem] overflow-hidden aspect-[4/5] shadow-[0_40px_80px_-15px_rgba(0,0,0,0.1)]">
+                <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=900&auto=format&fit=crop"
+                  alt="Paul and team" loading="lazy" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
+                <div className="absolute bottom-8 left-8 right-8 flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl border-2 border-amber-400 overflow-hidden shrink-0">
+                    <img src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=100&auto=format&fit=crop" alt="Paul" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <p className="text-white font-black text-lg" style={{ fontFamily: "Outfit, sans-serif" }}>Paul</p>
+                    <p className="text-amber-400 text-xs uppercase tracking-widest font-bold">Founder · 8 years in Oz</p>
+                  </div>
+                </div>
+              </div>
             </div>
+            <div>
+              <p className="reveal text-xs font-black uppercase tracking-[.25em] text-amber-500 mb-4">{t.paul.badge}</p>
+              <h2 className="reveal reveal-delay-1 text-4xl sm:text-5xl font-black text-slate-900 leading-tight tracking-tight mb-6" style={{ fontFamily: "Outfit, sans-serif" }}>
+                {t.paul.title} <span className="shimmer">{t.paul.titleAccent}</span>
+              </h2>
+              <div className="space-y-4 text-slate-500 text-lg leading-relaxed mb-8">
+                <p className="reveal reveal-delay-1 font-bold text-slate-900 text-xl">{t.paul.greeting}</p>
+                <p className="reveal reveal-delay-2">{t.paul.p1}</p>
+                <p className="reveal reveal-delay-2">{t.paul.p2}</p>
+                <div className="reveal reveal-delay-3 border-l-4 border-amber-400 pl-5 py-1">
+                  <p className="italic text-slate-600">{t.paul.p3}</p>
+                </div>
+              </div>
+              <div className="reveal reveal-delay-4 grid sm:grid-cols-2 gap-4">
+                <div className="bg-emerald-50 rounded-2xl p-5 border border-emerald-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Check className="w-4 h-4 text-emerald-600" />
+                    <span className="text-emerald-800 font-black text-xs uppercase tracking-wider">{t.paul.whatWeDo}</span>
+                  </div>
+                  <p className="text-slate-500 text-sm leading-relaxed">{t.paul.whatWeDoDesc}</p>
+                </div>
+                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <X className="w-4 h-4 text-slate-400" />
+                    <span className="text-slate-600 font-black text-xs uppercase tracking-wider">{t.paul.whatWeDontDo}</span>
+                  </div>
+                  <p className="text-slate-500 text-sm leading-relaxed">{t.paul.whatWeDontDoDesc}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-            <div className="flex flex-wrap justify-center gap-10 opacity-40">
-              {t.contact.features.map((feature, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                  <span className="text-white text-[10px] font-black uppercase tracking-[0.2em]">{feature}</span>
+      <div className="h-px bg-gradient-to-r from-transparent via-slate-100 to-transparent mx-5" />
+
+      {/* ══════════════════════════════════════════
+          TESTIMONIALS
+      ══════════════════════════════════════════ */}
+      <section id="temoignages" className="relative py-24 overflow-hidden section-alt">
+        <div className="max-w-7xl mx-auto px-5 relative z-10" ref={r6}>
+          <div className="text-center mb-14">
+            <p className="reveal text-xs font-black uppercase tracking-[.25em] text-amber-500 mb-4">{t.testimonials.badge}</p>
+            <h2 className="reveal reveal-delay-1 text-4xl sm:text-5xl font-black text-slate-900 tracking-tight" style={{ fontFamily: "Outfit, sans-serif" }}>
+              {t.testimonials.title} <span className="shimmer">{t.testimonials.titleAccent}</span>
+            </h2>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {t.testimonials.items.map((item, i) => (
+              <div key={i} className={`reveal card-lift bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm flex flex-col reveal-delay-${i + 1}`}>
+                <div className="flex gap-1 mb-5">
+                  {[...Array(5)].map((_, si) => <Star key={si} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
+                </div>
+                <Quote className="w-8 h-8 text-amber-100 mb-3" />
+                <p className="text-slate-500 italic text-base leading-relaxed flex-grow mb-6">"{item.text}"</p>
+                <div className="flex items-center gap-3 pt-5 border-t border-slate-50">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-black text-sm">
+                    {item.name.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="font-black text-slate-900 text-sm">{item.name}</p>
+                    <p className="text-slate-400 text-xs flex items-center gap-1 mt-0.5">
+                      <MapPin className="w-3 h-3 text-amber-400" />{(item as any).origin ?? "Australia"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="h-px bg-gradient-to-r from-transparent via-slate-100 to-transparent mx-5" />
+
+      {/* ══════════════════════════════════════════
+          PARENTS
+      ══════════════════════════════════════════ */}
+      <section id="parents" className="relative py-24 overflow-hidden bg-white">
+        <div className="max-w-5xl mx-auto px-5 relative z-10" ref={r7}>
+          <div className="reveal bg-gradient-to-br from-amber-50 to-orange-50 rounded-[3rem] p-12 sm:p-16 text-center border border-amber-100 relative overflow-hidden">
+            <div className="absolute -top-10 -right-10 w-64 h-64 rounded-full bg-amber-200/20 pointer-events-none" />
+            <p className="text-xs font-black uppercase tracking-[.25em] text-amber-600 mb-5">{t.parents.badge}</p>
+            <h2 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight mb-5 relative z-10" style={{ fontFamily: "Outfit, sans-serif" }}>
+              {t.parents.title} <span className="shimmer">{t.parents.titleAccent}</span>
+            </h2>
+            <p className="text-slate-900 font-bold text-xl mb-4 max-w-xl mx-auto">{t.parents.p1}</p>
+            <p className="text-slate-500 text-lg leading-relaxed mb-8 max-w-2xl mx-auto">{t.parents.p2}</p>
+            <div className="flex flex-wrap justify-center gap-3 mb-10">
+              {t.parents.features.map((f, i) => (
+                <div key={i} className="flex items-center gap-2 bg-white/70 px-4 py-2.5 rounded-full border border-amber-100 text-slate-700 text-sm font-semibold">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />{f}
+                </div>
+              ))}
+            </div>
+            <a href={wa} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-2.5 bg-slate-900 hover:bg-amber-500 text-white font-black text-sm uppercase tracking-wide px-8 py-4 rounded-2xl transition-all shadow-lg btn-shine">
+              <MessageCircle className="w-5 h-5" />{t.parents.cta}
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════
+          CONTACT
+      ══════════════════════════════════════════ */}
+      <section id="contact" className="relative bg-slate-950 py-36 overflow-hidden text-center">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(245,158,11,0.1)_0%,transparent_65%)]" />
+        <div className="max-w-3xl mx-auto px-5 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: .8, ease: [.22, 1, .36, 1] }}
+          >
+            <p className="text-amber-400 text-xs font-black uppercase tracking-[.25em] mb-8">
+              {lang === "FR" ? "On est là pour toi" : "We're here for you"}
+            </p>
+            <h2 className="text-5xl sm:text-7xl font-black text-white tracking-tighter leading-[.9] mb-8" style={{ fontFamily: "Outfit, sans-serif" }}>
+              {t.contact.title}<br /><span className="shimmer">{t.contact.titleAccent}</span>
+            </h2>
+            <p className="text-white/40 text-xl mb-12 leading-relaxed">{t.contact.subtitle}</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-14">
+              <a href={wa} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-3 bg-white text-slate-900 font-black text-sm uppercase tracking-wide px-10 py-5 rounded-2xl hover:bg-amber-50 transition-colors btn-shine shadow-[0_0_40px_rgba(255,255,255,.06)]">
+                <MessageCircle className="w-5 h-5 text-emerald-500" />
+                {lang === "FR" ? "Parler à Paul" : "Talk to Paul"}
+              </a>
+              <a href={email}
+                className="inline-flex items-center justify-center gap-3 border border-white/10 text-white font-black text-sm uppercase tracking-wide px-10 py-5 rounded-2xl hover:bg-white/5 transition-colors">
+                <Mail className="w-5 h-5" />Email
+              </a>
+            </div>
+            <div className="flex flex-wrap justify-center gap-8 opacity-35">
+              {t.contact.features.map((f, i) => (
+                <div key={i} className="flex items-center gap-2 text-white text-xs font-bold uppercase tracking-widest">
+                  <span className="w-1 h-1 rounded-full bg-amber-500" />{f}
                 </div>
               ))}
             </div>
@@ -892,49 +595,29 @@ export default function OZConnectionPage() {
         </div>
       </section>
 
-      {/* ══════════════════════════════ FOOTER ══════════════════════════════ */}
-      <footer className="py-16 bg-white border-t border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-10">
-            <div className="flex flex-col items-center lg:items-start gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white shadow-lg shadow-amber-500/20">
-                  <Sun className="w-5 h-5" />
-                </div>
-                <span className="text-slate-900 font-black text-xl tracking-tight" style={{ fontFamily: "Outfit, sans-serif" }}>
-                  OZ <span className="text-amber-500">Connection</span>
-                </span>
-              </div>
-              <p className="text-slate-400 text-xs font-medium uppercase tracking-widest max-w-xs text-center lg:text-left">
-                {t.footer.tagline}
-              </p>
+      {/* ── Footer ── */}
+      <footer className="bg-[#060810] py-10 border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+              <Sun className="w-4 h-4 text-white" />
             </div>
-
-            <div className="flex flex-wrap justify-center gap-8">
-              {navLinks.slice(0, 5).map(link => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  onClick={e => scrollToSection(e, link.href)}
-                  className="text-slate-500 hover:text-amber-500 text-xs font-black uppercase tracking-[0.2em] transition-colors reveal-line"
-                  style={{ fontFamily: "Inter, sans-serif" }}
-                >
-                  {t.nav[link.key as keyof typeof t.nav]}
-                </a>
-              ))}
-            </div>
-
-            <div className="flex flex-col items-center lg:items-end gap-2">
-              <p className="text-slate-900 font-black text-xs uppercase tracking-widest" style={{ fontFamily: "Inter, sans-serif" }}>
-                {t.footer.copyright}
-              </p>
-              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em]">
-                Melbourne · Sydney · Brisbane
-              </p>
-            </div>
+            <span className="text-white font-black text-base" style={{ fontFamily: "Outfit, sans-serif" }}>
+              OZ <span className="text-amber-500">Connection</span>
+            </span>
+          </div>
+          <p className="text-white/25 text-xs uppercase tracking-widest">{t.footer.copyright} · Melbourne</p>
+          <div className="flex gap-5 flex-wrap justify-center">
+            {[["arrive", lang === "FR" ? "Arrivée" : "Arrival"], ["jobs", "Jobs"], ["install", lang === "FR" ? "Installer" : "Settle"], ["visa", "Visa"], ["about", lang === "FR" ? "À propos" : "About"], ["contact", "Contact"]].map(([id, label]) => (
+              <button key={id} onClick={() => scrollTo(id)}
+                className="text-white/25 hover:text-amber-400 text-xs uppercase tracking-wider font-bold transition-colors">
+                {label}
+              </button>
+            ))}
           </div>
         </div>
       </footer>
+
     </div>
   );
 }
