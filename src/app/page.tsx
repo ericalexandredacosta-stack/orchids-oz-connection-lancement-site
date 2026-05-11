@@ -1,653 +1,1163 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { translations, type Language } from "@/lib/translations";
-import { GridPattern } from "@/components/grid-pattern";
-import { MagicCard } from "@/components/magic-card";
-import { Spotlight } from "@/components/spotlight";
-import { TextGenerateEffect } from "@/components/text-generate-effect";
+import Link from "next/link";
+import { translations } from "@/lib/translations";
+import { useLang } from "@/lib/lang-context";
 import {
-  MessageCircle, Mail, Globe, Sun,
-  MapPin, Star, Quote, CheckCircle2, ShieldCheck,
-  Briefcase, Home, Car, GraduationCap, FileCheck, Compass,
-  Check, X, ArrowDown, Users, Clock, Zap,
+  MessageCircle, ArrowRight, CheckCircle2, XCircle,
+  FileText, Briefcase, Building2, Smartphone, Bike, Home,
+  MapPin, ShieldCheck, Languages, GraduationCap, AlertCircle,
 } from "lucide-react";
 
-/* ─── Hero images ─── */
 const heroImages = [
-  { url: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?q=80&w=1920&auto=format&fit=crop", loc: "Sydney" },
-  { url: "https://images.unsplash.com/photo-1529108190281-9a4f620bc2d8?q=80&w=1920&auto=format&fit=crop", loc: "Victoria" },
-  { url: "https://images.unsplash.com/photo-1523482580672-f109ba8cb9be?q=80&w=1920&auto=format&fit=crop", loc: "Northern Territory" },
-  { url: "https://images.unsplash.com/photo-1545044846-351ba102b6d5?q=80&w=1920&auto=format&fit=crop", loc: "Bondi Beach" },
+  { url: "https://images.unsplash.com/photo-1545044846-351ba102b6d5?q=80&w=1920&auto=format&fit=crop" },
+  { url: "https://images.unsplash.com/photo-1529108190281-9a4f620bc2d8?q=80&w=1920&auto=format&fit=crop" },
+  { url: "https://images.unsplash.com/photo-1624138784614-87fd1b6528f8?q=80&w=1920&auto=format&fit=crop" },
+  { url: "https://images.unsplash.com/photo-1514395462725-fb4566210144?q=80&w=1920&auto=format&fit=crop" },
 ];
 
-/* ─── Chapter config ─── */
-type Chapter = { id: string; labelFR: string; labelEN: string; orb: string; accent: string };
-const CHAPTERS: Chapter[] = [
-  { id: "hero",    labelFR: "Accueil",     labelEN: "Home",      orb: "rgba(245,158,11,0.13)",  accent: "#f59e0b" },
-  { id: "arrive",  labelFR: "Arrivée",     labelEN: "Arrival",   orb: "rgba(245,158,11,0.10)",  accent: "#f59e0b" },
-  { id: "jobs",    labelFR: "Jobs",        labelEN: "Jobs",      orb: "rgba(16,185,129,0.10)",   accent: "#10b981" },
-  { id: "install", labelFR: "S'installer", labelEN: "Settle in", orb: "rgba(249,115,22,0.10)",   accent: "#f97316" },
-  { id: "visa",    labelFR: "Visa",        labelEN: "Visa",      orb: "rgba(99,102,241,0.10)",   accent: "#6366f1" },
-  { id: "about",   labelFR: "À propos",    labelEN: "About",     orb: "rgba(245,158,11,0.08)",   accent: "#f59e0b" },
-  { id: "contact", labelFR: "Contact",     labelEN: "Contact",   orb: "rgba(245,158,11,0.12)",   accent: "#f59e0b" },
-];
+const wa = "https://wa.me/+61494652991";
 
-/* ─── Reveal hook ─── */
-function useReveal() {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!ref.current) return;
-    const io = new IntersectionObserver(
-      entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add("visible"); }),
-      { threshold: 0.1 }
-    );
-    ref.current.querySelectorAll(".reveal").forEach(el => io.observe(el));
-    return () => io.disconnect();
-  }, []);
-  return ref;
+function Reveal({ children, delay = 0, className = "" }: {
+  children: React.ReactNode; delay?: number; className?: string;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 18 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.25 }}
+      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
 }
 
-/* ─── Main ─── */
-export default function OZConnectionPage() {
-  const wa    = "https://wa.me/+61494652991";
-  const email = "mailto:contact@ozconnection.com";
+// ── Custom Cursor ──
+function CustomCursor() {
+  const dotRef  = useRef<HTMLDivElement>(null);
+  const ringRef = useRef<HTMLDivElement>(null);
+  const pos     = useRef({ x: 0, y: 0 });
+  const raf     = useRef<number>(0);
 
-  const [lang, setLang]       = useState<Language>("EN");
-  const [slide, setSlide]     = useState(0);
-  const [autoplay, setAuto]   = useState(true);
-  const [scrolled, setScrolled] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [activeIdx, setActiveIdx] = useState(0);
-
-  const t = translations[lang];
-  const serviceIcons = [FileCheck, GraduationCap, Briefcase, Home, Car, Compass];
-
-  /* lang */
   useEffect(() => {
-    const s = localStorage.getItem("language") as Language;
-    if (s === "FR" || s === "EN") setLang(s);
+    const dot  = dotRef.current;
+    const ring = ringRef.current;
+    if (!dot || !ring) return;
+    let lx = 0, ly = 0;
+    const onMove = (e: MouseEvent) => {
+      pos.current = { x: e.clientX, y: e.clientY };
+      dot.style.transform = `translate(calc(-50% + ${e.clientX}px), calc(-50% + ${e.clientY}px))`;
+      document.documentElement.classList.remove("oz-cursor-hidden");
+    };
+    const onLeave = () => document.documentElement.classList.add("oz-cursor-hidden");
+    const onEnter = () => document.documentElement.classList.remove("oz-cursor-hidden");
+    const onOver = (e: MouseEvent) => {
+      const el = e.target as HTMLElement;
+      document.documentElement.classList.toggle("oz-cursor-hover", !!el.closest("a, button, [role='button']"));
+    };
+    const animate = () => {
+      lx += (pos.current.x - lx) * 0.12;
+      ly += (pos.current.y - ly) * 0.12;
+      ring.style.transform = `translate(calc(-50% + ${lx}px), calc(-50% + ${ly}px))`;
+      raf.current = requestAnimationFrame(animate);
+    };
+    raf.current = requestAnimationFrame(animate);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseover", onOver);
+    document.documentElement.addEventListener("mouseleave", onLeave);
+    document.documentElement.addEventListener("mouseenter", onEnter);
+    return () => {
+      cancelAnimationFrame(raf.current);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseover", onOver);
+      document.documentElement.removeEventListener("mouseleave", onLeave);
+      document.documentElement.removeEventListener("mouseenter", onEnter);
+    };
   }, []);
-  const toggleLang = () => {
-    const n = lang === "FR" ? "EN" : "FR";
-    setLang(n); localStorage.setItem("language", n);
+
+  return (
+    <>
+      <div id="oz-cursor-ring" ref={ringRef} aria-hidden="true" />
+      <div id="oz-cursor-dot"  ref={dotRef}  aria-hidden="true" />
+    </>
+  );
+}
+
+// ── GridPattern SVG ──
+function GridPattern({ opacity = 0.06, light = false }: { opacity?: number; light?: boolean }) {
+  return (
+    <svg aria-hidden="true" className="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id={`grid-${light}`} width="20" height="20" patternUnits="userSpaceOnUse">
+          <circle cx="1" cy="1" r="1" fill={light ? "#F4EDE0" : "#345266"} />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill={`url(#grid-${light})`} opacity={opacity} />
+    </svg>
+  );
+}
+
+// ── Spotlight SVG ──
+function Spotlight({ color = "#F29700", x = "25%", y = "25%", size = "45%", opacity = 0.45 }: {
+  color?: string; x?: string; y?: string; size?: string; opacity?: number;
+}) {
+  return (
+    <svg aria-hidden="true" className="absolute pointer-events-none spotlight-pulse"
+      style={{ left: x, top: y, width: size, height: size, transform: "translate(-50%, -50%)" }}
+      viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id={`sp-${color.replace('#','')}`} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor={color} stopOpacity={opacity} />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <ellipse cx="100" cy="100" rx="100" ry="100" fill={`url(#sp-${color.replace('#','')})`} />
+    </svg>
+  );
+}
+
+// ── MagicCard ──
+function MagicCard({ children, highlight = false, className = "" }: {
+  children: React.ReactNode; highlight?: boolean; className?: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const card = ref.current;
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    card.style.setProperty("--mx", `${mx}px`);
+    card.style.setProperty("--my", `${my}px`);
   };
 
-  /* hero */
+  return (
+    <div
+      ref={ref}
+      onMouseMove={onMouseMove}
+      className={`magic-card relative flex flex-col h-full rounded-[18px] p-6 border transition-transform duration-300 hover:-translate-y-1 ${
+        highlight
+          ? "border-transparent text-white"
+          : "border-ocean-400/20 text-sand-100"
+      } ${className}`}
+      style={{ "--mx": "50%", "--my": "50%" } as React.CSSProperties}
+    >
+      <div
+        className="magic-card-border absolute inset-0 rounded-[18px] pointer-events-none"
+        style={{
+          background: highlight
+            ? "radial-gradient(280px circle at var(--mx) var(--my), rgba(255,255,255,0.5), transparent 70%)"
+            : "radial-gradient(280px circle at var(--mx) var(--my), rgba(226,154,120,0.55), transparent 70%)",
+          WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+          WebkitMaskComposite: "xor",
+          padding: "1px",
+        }}
+      />
+      <div
+        className="magic-card-spotlight absolute inset-0 rounded-[18px] pointer-events-none"
+        style={{
+          background: `radial-gradient(360px circle at var(--mx) var(--my), ${highlight ? "rgba(255,255,255,0.08)" : "rgba(242,151,0,0.08)"}, transparent 60%)`,
+        }}
+      />
+      {children}
+    </div>
+  );
+}
+
+// ── TextGenerateEffect ──
+function TextGenerateEffect({ text, className = "" }: { text: string; className?: string }) {
+  const words = text.split(" ");
+  return (
+    <motion.p
+      className={className}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.25 }}
+      variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.04 } } }}
+    >
+      {words.map((word, i) => (
+        <motion.span
+          key={i}
+          variants={{ hidden: { opacity: 0 }, visible: { opacity: 1 } }}
+          className="inline-block mr-[0.3em]"
+        >
+          {word}
+        </motion.span>
+      ))}
+    </motion.p>
+  );
+}
+
+// ── HoverEffect FAQ ──
+function HoverEffectFAQ({ items }: { items: { q: string; a: string }[] }) {
+  const [hovered, setHovered] = useState<number | null>(null);
+
+  return (
+    <div className="relative space-y-1">
+      {items.map((item, i) => (
+        <div
+          key={i}
+          className="relative group rounded-2xl px-6 py-5 cursor-pointer"
+          onMouseEnter={() => setHovered(i)}
+          onMouseLeave={() => setHovered(null)}
+        >
+          {hovered === i && (
+            <motion.div
+              layoutId="faq-highlight"
+              className="absolute inset-0 rounded-2xl" style={{ background: "rgba(30,58,74,0.06)" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            />
+          )}
+          <div className="relative z-10">
+            <p className="font-semibold text-[0.95rem] mb-2 transition-colors" style={{ color: "#1E3A4A" }}>
+              {item.q}
+            </p>
+            <p className="text-ocean-400/70 text-sm leading-relaxed">{item.a}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── WorldMap SVG ──
+function WorldMap() {
+  const cities = [
+    { label: "Paris", x: 47.5, y: 23 },
+    { label: "London", x: 45.5, y: 20 },
+    { label: "Berlin", x: 50, y: 21 },
+    { label: "Madrid", x: 44, y: 27 },
+    { label: "Montréal", x: 22, y: 22 },
+    { label: "Sydney", x: 83, y: 72 },
+  ];
+  const naarm = { x: 81.5, y: 74 };
+
+  return (
+    <svg viewBox="0 0 100 65" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+      {/* Dot grid world map */}
+      <defs>
+        <pattern id="wm-dots" width="1.4" height="1.1" patternUnits="userSpaceOnUse">
+          <circle cx="0.7" cy="0.55" r="0.25" fill="#345266" />
+        </pattern>
+        <mask id="wm-land">
+          <rect width="100" height="65" fill="url(#wm-dots)" />
+        </mask>
+      </defs>
+
+      {/* Rough continental shapes */}
+      {[
+        /* N America */ "M 10 15 L 25 10 L 30 14 L 35 12 L 37 18 L 34 25 L 28 28 L 20 26 L 12 22 Z",
+        /* S America */ "M 22 30 L 30 28 L 32 35 L 30 45 L 26 50 L 21 48 L 18 40 Z",
+        /* Europe    */ "M 44 16 L 56 14 L 58 20 L 54 24 L 46 24 L 43 20 Z",
+        /* Africa    */ "M 46 26 L 55 24 L 58 32 L 55 44 L 50 48 L 44 44 L 43 35 Z",
+        /* Asia      */ "M 58 14 L 82 10 L 85 20 L 78 28 L 68 30 L 58 24 Z",
+        /* Oceania   */ "M 78 60 L 88 56 L 92 62 L 86 67 L 78 66 Z",
+      ].map((d, i) => (
+        <path key={i} d={d} fill="#1E3A4A" opacity="0.12" />
+      ))}
+
+      {/* Animated arcs from cities to Naarm */}
+      {cities.map((city, i) => (
+        <g key={i}>
+          <path
+            d={`M ${city.x} ${city.y} Q ${(city.x + naarm.x) / 2 - 5} ${Math.min(city.y, naarm.y) - 12} ${naarm.x} ${naarm.y}`}
+            fill="none"
+            stroke="#F29700"
+            strokeWidth="0.35"
+            strokeDasharray="0 1000"
+            opacity="0.7"
+          >
+            <animate
+              attributeName="stroke-dasharray"
+              from="0 1000"
+              to="1000 0"
+              dur="2s"
+              begin={`${i * 0.4}s`}
+              repeatCount="indefinite"
+            />
+          </path>
+          {/* City dot */}
+          <circle cx={city.x} cy={city.y} r="0.8" fill="#F29700" opacity="0.5" />
+          <circle cx={city.x} cy={city.y} r="0.3" fill="#F29700" />
+        </g>
+      ))}
+
+      {/* Naarm / Melbourne */}
+      <circle cx={naarm.x} cy={naarm.y} r="1.8" fill="#F29700" opacity="0.25" />
+      <circle cx={naarm.x} cy={naarm.y} r="1" fill="#F29700" opacity="0.6" />
+      <circle cx={naarm.x} cy={naarm.y} r="0.4" fill="#F29700" />
+    </svg>
+  );
+}
+
+// ── Icon helper ──
+const iconMap: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
+  FileText, Briefcase, Building2, Smartphone, Bike, Home, MapPin, ShieldCheck, Languages,
+};
+
+export default function HomePage() {
+  const { lang } = useLang();
+  const t = translations[lang] as typeof translations["FR"];
+
+  const [slide, setSlide] = useState(0);
+  const [autoplay, setAuto] = useState(true);
+  const [progress, setProgress] = useState(0);
+
   const nextSlide = useCallback(() => setSlide(p => (p + 1) % heroImages.length), []);
-  const prevSlide = useCallback(() => setSlide(p => (p - 1 + heroImages.length) % heroImages.length), []);
   useEffect(() => {
     if (!autoplay) return;
     const id = setInterval(nextSlide, 5500);
     return () => clearInterval(id);
   }, [autoplay, nextSlide]);
 
-  /* scroll → orb + progress + active chapter */
   useEffect(() => {
     const onScroll = () => {
       const total = document.body.scrollHeight - window.innerHeight;
-      const ratio = total > 0 ? window.scrollY / total : 0;
-      setProgress(ratio * 100);
-      setScrolled(window.scrollY > 60);
-
-      /* active chapter */
-      let found = 0;
-      for (let i = CHAPTERS.length - 1; i >= 0; i--) {
-        const el = document.getElementById(CHAPTERS[i].id);
-        if (el && el.getBoundingClientRect().top <= window.innerHeight * 0.5) { found = i; break; }
-      }
-      setActiveIdx(found);
-
-      /* update CSS custom props for orb (no re-render) */
-      const root = document.documentElement;
-      root.style.setProperty("--orb-y", `${10 + ratio * 80}%`);
-      root.style.setProperty("--orb-color", CHAPTERS[found].orb);
+      setProgress(total > 0 ? (window.scrollY / total) * 100 : 0);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const scrollTo = (id: string) =>
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const trust = [
+    lang === "FR" ? "Basé à Melbourne" : "Melbourne-based",
+    lang === "FR" ? "Support FR & EN" : "FR & EN support",
+    lang === "FR" ? "8+ ans d'expérience" : "8+ years experience",
+    lang === "FR" ? "Prix de lancement" : "Launch price",
+  ];
 
-  /* story copy */
-  const story = {
-    FR: {
-      ch1: { eyebrow: "01 — Tu arrives", h: "Perdu dès le premier jour ?", sub: "C'est normal. C'est là qu'on intervient.", body: "Décalage horaire, paperasse, logement à trouver... Arriver sans réseau peut vite devenir un cauchemar. OZ Connection, c'est le contact qu'on aurait voulu avoir à notre arrivée." },
-      ch2: { eyebrow: "02 — Tu veux travailler", h: "On te connecte au bon réseau.", sub: "Pas un CV dans le vide. De vraies connexions locales.", body: "Trouver un job en Australie ça ne marche pas comme en France. Il faut le bon réseau et la bonne approche. On te partage ce qu'on sait, les contacts qui comptent, et on t'aide à éviter les erreurs classiques." },
-      ch3: { eyebrow: "03 — Tu t'installes", h: "Melbourne devient ta ville.", sub: "Logement, transport, quotidien — pour poser vraiment les valises.", body: "Un appartement sans arnaque, un scooter pour explorer, les bonnes adresses... S'installer pour de vrai c'est plus qu'un visa. On te guide sur le terrain qu'on connaît." },
-      ch4: { eyebrow: "04 — Tu veux rester", h: "Ton visa se termine. Et alors ?", sub: "Ce n'est pas une fin. Ça peut être un nouveau départ.", body: "Visa étudiant, travailleur qualifié, partenariat... Des solutions existent. On ne fait pas les visas nous-mêmes, mais on te connecte à notre agent partenaire MARA." },
-    },
-    EN: {
-      ch1: { eyebrow: "01 — You arrive", h: "Lost from day one?", sub: "That's normal. That's exactly where we come in.", body: "Jet lag, paperwork, finding housing... Arriving without a network can quickly turn into a nightmare. OZ Connection is the contact we wish we'd had when we first landed." },
-      ch2: { eyebrow: "02 — You want to work", h: "We connect you to the right network.", sub: "Not a CV thrown into the void. Real local connections.", body: "Finding a job in Australia doesn't work the same as back home. You need the right network and approach. We share what we know, the contacts that matter, and help you avoid classic mistakes." },
-      ch3: { eyebrow: "03 — You settle in", h: "Melbourne becomes your city.", sub: "Housing, transport, daily life — everything to truly settle.", body: "An apartment without scams, a scooter to explore, the best local spots... Truly settling in is more than a visa. We guide you on terrain we know well." },
-      ch4: { eyebrow: "04 — You want to stay", h: "Your visa ends. So what?", sub: "It's not the end. It could be a new beginning.", body: "Student visa, skilled worker, partner visa... Solutions exist. We don't do visas ourselves, but we connect you with our MARA partner agent." },
-    }
-  };
-  const S = story[lang];
-
-  /* reveal refs */
-  const r1 = useReveal(), r2 = useReveal(), r3 = useReveal(),
-        r4 = useReveal(), r5 = useReveal(), r6 = useReveal(), r7 = useReveal();
-
-  const accent = CHAPTERS[activeIdx].accent;
+  // FAQ — 4 items for home
+  const homeFaq = t.faq.items.filter((_, i) => [0, 3, 4, 7].includes(i));
 
   return (
-    <div className="min-h-screen bg-white relative">
-
-      {/* ── Ambient orb (position driven by CSS vars, zero re-render) ── */}
-      <div id="ambient-orb" aria-hidden="true" />
-
-      {/* ── Scroll progress ── */}
+    <div className="min-h-screen" style={{ background: "var(--color-bg)" }}>
+      <CustomCursor />
       <div id="progress-bar" style={{ width: `${progress}%` }} />
 
-      {/* ── Chapter timeline (desktop left) ── */}
-      <div id="chapter-timeline" aria-hidden="true">
-        {CHAPTERS.map((ch, i) => (
-          <div key={ch.id}>
-            <div className={`stop ${activeIdx === i ? "active" : ""}`} onClick={() => scrollTo(ch.id)}>
-              <div className="dot" style={activeIdx === i ? { borderColor: ch.accent, background: ch.accent } : {}} />
-              <span className="label" style={activeIdx === i ? { color: ch.accent } : {}}>
-                {lang === "FR" ? ch.labelFR : ch.labelEN}
-              </span>
-            </div>
-            {i < CHAPTERS.length - 1 && (
-              <div className="line">
-                <div style={{ height: activeIdx > i ? "100%" : "0%", background: ch.accent, width: "100%", transition: "height .5s ease" }} />
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* ══════════════════════════════════════════
-          NAV
-      ══════════════════════════════════════════ */}
-      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-400 ${
-        scrolled ? "bg-white/90 backdrop-blur-xl shadow-[0_1px_0_rgba(0,0,0,0.06)] py-3" : "bg-transparent py-5"
-      }`}>
-        <div className="max-w-7xl mx-auto px-5 flex items-center justify-between">
-          <button onClick={() => scrollTo("hero")} className="flex items-center gap-2.5 group z-10">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md shadow-amber-500/20 group-hover:scale-105 transition-transform">
-              <Sun className="w-5 h-5 text-white" />
-            </div>
-            <span className={`font-black text-lg tracking-tight transition-colors duration-300 ${scrolled ? "text-slate-900" : "text-white"}`} style={{ fontFamily: "Outfit, sans-serif" }}>
-              OZ <span className="text-amber-500">Connection</span>
-            </span>
-          </button>
-
-          <div className="flex items-center gap-3">
-            <button onClick={toggleLang} className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black border transition-all ${
-              scrolled ? "border-slate-200 text-slate-700 hover:bg-slate-50" : "border-white/25 text-white/80 hover:bg-white/10"
-            }`}>
-              <Globe className="w-3.5 h-3.5" />{lang === "FR" ? "EN" : "FR"}
-            </button>
-            <a href={wa} target="_blank" rel="noopener noreferrer"
-              className="hidden sm:flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-900 font-black text-xs uppercase tracking-wider px-5 py-2.5 rounded-full transition-all shadow-md shadow-amber-500/20 btn-shine">
-              <MessageCircle className="w-4 h-4" />
-              {lang === "FR" ? "Nous contacter" : "Contact us"}
-            </a>
-          </div>
-        </div>
-      </header>
-
-      {/* ══════════════════════════════════════════
-          HERO — dark, images CSS-crossfade
-      ══════════════════════════════════════════ */}
-      <section id="hero" className="relative h-screen min-h-[600px] flex items-center overflow-hidden bg-[#080c16]">
+      {/* ── 01. HERO ── */}
+      <section id="hero" className="relative h-screen min-h-[620px] flex items-center overflow-hidden"
+        style={{ background: "#0A1820" }}>
         {heroImages.map((img, i) => (
-          <div key={i} className={`hero-slide${i === slide ? " active" : ""}`}
-            style={{ backgroundImage: `url(${img.url})` }} />
+          <div key={i}
+            className={`hero-slide${i === slide ? " active" : ""}`}
+            style={{ backgroundImage: `url(${img.url})` }}
+          />
         ))}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#080c16]/55 via-[#080c16]/25 to-[#080c16]/85 z-10" />
+        {/* Multi-layer overlay per brief */}
+        <div className="absolute inset-0 z-10"
+          style={{
+            background: "linear-gradient(to bottom, rgba(10,24,32,0.85) 0%, rgba(10,24,32,0.55) 50%, rgba(10,24,32,0.80) 100%)",
+          }} />
+        {/* Radial orange glow */}
+        <div className="absolute inset-0 z-10 pointer-events-none"
+          style={{ background: "radial-gradient(ellipse 60% 60% at 75% 25%, rgba(242,151,0,0.18), transparent 70%)" }} />
 
-        <div className="relative z-20 max-w-7xl mx-auto px-5 w-full">
+        {/* Hero content */}
+        <div className="relative z-20 max-w-7xl mx-auto px-5 w-full pt-28 pb-32 lg:pt-36 lg:pb-40">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.1, ease: [.22, 1, .36, 1], delay: .2 }}
+            transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
           >
-            <h1 className="text-6xl sm:text-8xl lg:text-[7rem] font-black text-white leading-[.9] tracking-tight mb-10" style={{ fontFamily: "Outfit, sans-serif" }}>
-              {lang === "FR"
-                ? <><span className="shimmer">Parce qu'on est</span><br />déjà passé par là.</>
-                : <><span className="shimmer">Because we've</span><br />been there too.</>}
+            {/* Pill kicker */}
+            <span className="inline-block mb-6 text-xs font-medium uppercase tracking-[0.06em] px-4 py-1.5 rounded-full backdrop-blur-sm"
+              style={{
+                background: "rgba(242,151,0,0.18)",
+                border: "1px solid rgba(242,151,0,0.35)",
+                color: "#F5C158",
+              }}>
+              {lang === "FR" ? "Melbourne · Australie" : "Melbourne · Australia"}
+            </span>
+
+            {/* H1 */}
+            <h1 className="font-display font-bold mb-4 leading-[1.05]"
+              style={{
+                color: "#F29700",
+                fontSize: "clamp(2.75rem, 7.2vw, 6.25rem)",
+                letterSpacing: "-0.03em",
+                textShadow: "0 2px 32px rgba(242,151,0,0.45)",
+              }}>
+              {lang === "FR" ? "Parce qu'on est\naussi passé par là." : "Because we've\nbeen through it too."}
             </h1>
-            <a href={wa} target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2.5 bg-white text-slate-900 font-black text-sm uppercase tracking-wide px-8 py-4 rounded-2xl shadow-xl shadow-black/20 hover:bg-amber-50 transition-colors btn-shine">
-              <MessageCircle className="w-5 h-5 text-emerald-500" />
-              {lang === "FR" ? "Nous contacter" : "Get in touch"}
-            </a>
-          </motion.div>
-        </div>
 
-        {/* Slide dots only */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2">
-          {heroImages.map((_, i) => (
-            <button key={i} onClick={() => { setSlide(i); setAuto(false); }}
-              className={`rounded-full transition-all duration-500 ${i === slide ? "w-8 h-1.5 bg-amber-500" : "w-1.5 h-1.5 bg-white/30 hover:bg-white/60"}`} />
-          ))}
-        </div>
-        {/* Scroll hint */}
-        <div className="absolute bottom-8 right-6 z-30">
-          <button onClick={() => scrollTo("arrive")} className="flex flex-col items-center gap-1.5 text-white/30 hover:text-white/60 transition-colors">
-            <ArrowDown className="w-4 h-4 animate-bounce" />
-          </button>
-        </div>
-      </section>
+            {/* Body */}
+            <p className="text-base sm:text-lg mb-10 max-w-2xl leading-relaxed"
+              style={{ color: "rgba(244,237,224,0.85)", textShadow: "0 1px 8px rgba(0,0,0,0.5)" }}>
+              {lang === "FR"
+                ? "Démarches, conseils et accompagnement à Melbourne pour backpackers et étudiants internationaux."
+                : "Setup, guidance and Melbourne arrival support for backpackers and international students."}
+            </p>
 
-      {/* ── Marquee ── */}
-      <div className="bg-amber-500 py-4 overflow-hidden relative z-10">
-        <div className="flex marquee whitespace-nowrap">
-          {[...Array(4)].map((_, ri) => (
-            <div key={ri} className="flex items-center gap-8 mr-8 shrink-0">
-              {(lang === "FR"
-                ? ["Arrivée & Orientation", "Jobs & Réseau", "Logement", "Transport & Scooter", "Visa & Migration", "Installation longue durée"]
-                : ["Arrival & Orientation", "Jobs & Network", "Housing", "Transport & Scooter", "Visa & Migration", "Long-term Settlement"]
-              ).map((item, i) => (
-                <span key={i} className="flex items-center gap-3 text-slate-900 font-black text-sm uppercase tracking-widest">
-                  <span className="w-1 h-1 rounded-full bg-slate-900/40" />{item}
+            {/* CTAs */}
+            <div className="flex flex-wrap items-center gap-4 mb-8">
+              <a href={wa} target="_blank" rel="noopener noreferrer"
+                className="btn-shine inline-flex items-center gap-2.5 font-bold text-sm px-7 py-4 rounded-full transition-all"
+                style={{
+                  background: "#F29700",
+                  color: "#fff",
+                  boxShadow: "0 4px 20px rgba(242,151,0,0.4)",
+                }}>
+                <MessageCircle className="w-5 h-5" />
+                {lang === "FR" ? "Commencer sur WhatsApp" : "Start on WhatsApp"}
+              </a>
+              <Link href="/packages"
+                className="inline-flex items-center gap-2 font-semibold text-sm px-6 py-3.5 rounded-full transition-colors backdrop-blur-sm"
+                style={{
+                  border: "1.5px solid rgba(244,237,224,0.35)",
+                  color: "#F4EDE0",
+                  background: "rgba(244,237,224,0.06)",
+                }}>
+                {lang === "FR" ? "Voir les packs" : "View packs"}
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+
+            {/* Trust bullets */}
+            <div className="flex flex-wrap gap-4">
+              {trust.map((item, i) => (
+                <span key={i} className="flex items-center gap-1.5 text-xs font-medium" style={{ color: "rgba(244,237,224,0.6)" }}>
+                  <span className="w-1 h-1 rounded-full" style={{ background: "#F29700" }} />{item}
                 </span>
               ))}
             </div>
+          </motion.div>
+        </div>
+
+        {/* Carousel dots */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2">
+          {heroImages.map((_, i) => (
+            <button key={i} onClick={() => { setSlide(i); setAuto(false); }}
+              className={`rounded-full transition-all duration-500 ${i === slide ? "w-8 h-1.5" : "w-1.5 h-1.5"}`} />
           ))}
+        </div>
+      </section>
+
+      {/* ── 02. TOPICS MARQUEE ── */}
+      <div className="overflow-hidden relative py-3"
+        style={{
+          background: "var(--color-bg-alt)",
+          borderTop: "1px solid var(--color-line)",
+          borderBottom: "1px solid var(--color-line)",
+        }}>
+        {/* Fade masks */}
+        <div className="absolute left-0 top-0 bottom-0 w-20 z-10 pointer-events-none"
+          style={{ background: "linear-gradient(to right, var(--color-bg-alt), transparent)" }} />
+        <div className="absolute right-0 top-0 bottom-0 w-20 z-10 pointer-events-none"
+          style={{ background: "linear-gradient(to left, var(--color-bg-alt), transparent)" }} />
+
+        {/* Row 1 */}
+        <div className="mb-2">
+          <div className="marquee-row" style={{ "--marquee-speed": "48s" } as React.CSSProperties}>
+            {[...t.topics, ...t.topics].map((chip, i) => (
+              <span key={i}
+                className="inline-flex items-center gap-1.5 mx-2 px-4 py-2 rounded-full border text-xs font-medium whitespace-nowrap"
+                style={{ background: "var(--color-bg)", borderColor: "var(--color-line)", color: "var(--color-ink-soft)" }}>
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#F29700" }} />{chip}
+              </span>
+            ))}
+          </div>
+        </div>
+        {/* Row 2 — reverse */}
+        <div>
+          <div className="marquee-row reverse" style={{ "--marquee-speed": "56s" } as React.CSSProperties}>
+            {[...[...t.topics].reverse(), ...[...t.topics].reverse()].map((chip, i) => (
+              <span key={i}
+                className="inline-flex items-center gap-1.5 mx-2 px-4 py-2 rounded-full border text-xs font-medium whitespace-nowrap"
+                style={{ background: "var(--color-bg)", borderColor: "var(--color-line)", color: "var(--color-ink-soft)" }}>
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#345266" }} />{chip}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* ══════════════════════════════════════════
-          CHAPTER 1 — ARRIVÉE
-      ══════════════════════════════════════════ */}
-      <section id="arrive" className="relative py-28 overflow-hidden bg-white">
-        <span className="watermark text-amber-500">01</span>
-        <div className="max-w-7xl mx-auto px-5 relative z-10" ref={r1}>
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div>
-              <p className="reveal text-xs font-black uppercase tracking-[.25em] text-amber-500 mb-4">{S.ch1.eyebrow}</p>
-              <h2 className="reveal reveal-delay-1 text-4xl sm:text-6xl font-black text-slate-900 leading-[.96] tracking-tight mb-4" style={{ fontFamily: "Outfit, sans-serif" }}>
-                {S.ch1.h}
-              </h2>
-              <p className="reveal reveal-delay-2 text-lg text-amber-600 font-semibold mb-5 chapter-accent-left" style={{ borderColor: "#f59e0b" }}>{S.ch1.sub}</p>
-              <p className="reveal reveal-delay-2 text-slate-500 text-lg leading-relaxed mb-10">
-                <TextGenerateEffect text={S.ch1.body} />
-              </p>
-              <a href={wa} target="_blank" rel="noopener noreferrer"
-                className="reveal reveal-delay-3 inline-flex items-center gap-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 font-black text-sm uppercase tracking-wide px-8 py-4 rounded-2xl transition-all shadow-lg shadow-amber-500/20 btn-shine">
-                <MessageCircle className="w-5 h-5" />
-                {lang === "FR" ? "On discute ?" : "Let's talk"}
-              </a>
+      {/* ── 03. PROBLEM ── */}
+      <section className="relative py-24 overflow-hidden" style={{ background: "var(--color-bg-alt)" }}>
+        <GridPattern opacity={0.07} />
+        <div className="relative max-w-7xl mx-auto px-5">
+          <div className="grid lg:grid-cols-12 gap-8 lg:gap-16 items-start">
+            {/* Left: kicker + H2 + blockquote */}
+            <div className="lg:col-span-4">
+              <motion.span
+                initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0 }}
+                className="pill-kicker">{t.problem.kicker}
+              </motion.span>
+              <motion.h2
+                initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.05 }}
+                className="font-display font-bold text-ocean-600 leading-tight mb-6"
+                style={{ fontSize: "clamp(2rem, 3.8vw, 3rem)", letterSpacing: "-0.02em" }}>
+                {t.problem.h2}
+              </motion.h2>
+              <motion.blockquote
+                initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.1 }}
+                className="hidden lg:block italic font-display text-ocean-400/70 text-lg border-l-2 pl-4 leading-snug"
+                style={{ borderColor: "var(--color-accent)" }}>
+                {t.problem.quote}
+              </motion.blockquote>
             </div>
-            <div className="reveal reveal-delay-2 grid grid-cols-2 gap-4">
-              {[
-                { icon: Clock, title: lang === "FR" ? "Réponse sous 24h" : "Reply within 24h",      sub: lang === "FR" ? "On est là"            : "We're here" },
-                { icon: MapPin, title: lang === "FR" ? "À Melbourne"      : "In Melbourne",          sub: lang === "FR" ? "Sur le terrain"        : "On the ground" },
-                { icon: Users, title: lang === "FR" ? "Équipe locale"     : "Local team",            sub: lang === "FR" ? "8 ans d'expérience"    : "8 years experience" },
-                { icon: Zap,   title: lang === "FR" ? "1er échange gratuit" : "Free first chat",     sub: lang === "FR" ? "Sans engagement"       : "No commitment" },
-              ].map(({ icon: Icon, title, sub }, i) => (
-                <div key={i} className="card-lift bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
-                  <div className="w-11 h-11 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500 mb-4">
-                    <Icon className="w-5 h-5" />
+
+            {/* Right: lead text + pull quote */}
+            <div className="lg:col-span-8">
+              <TextGenerateEffect
+                text={t.problem.lead}
+                className="text-ocean-600/80 text-lg lg:text-xl leading-relaxed mb-8"
+              />
+              <motion.div
+                initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.15 }}
+                className="border-l-2 pl-5 py-1"
+                style={{ borderColor: "#F29700" }}>
+                <p className="font-display italic font-medium text-ocean-600 text-xl">{t.problem.pullQuote}</p>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 04. PROCESS ── */}
+      <section className="relative py-24 overflow-hidden" style={{ background: "var(--color-bg)" }}>
+        <div className="max-w-7xl mx-auto px-5">
+          <div className="text-center mb-16">
+            <motion.span
+              initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0 }}
+              className="pill-kicker">{t.process.kicker}
+            </motion.span>
+            <motion.h2
+              initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.05 }}
+              className="font-display font-bold text-ocean-600"
+              style={{ fontSize: "clamp(2rem, 3.8vw, 3rem)", letterSpacing: "-0.02em" }}>
+              {t.process.h2}
+            </motion.h2>
+          </div>
+
+          {/* Steps — horizontal desktop, vertical mobile */}
+          <div className="relative">
+            {/* Dashed connector line — desktop only */}
+            <svg aria-hidden="true"
+              className="hidden lg:block absolute top-12 pointer-events-none"
+              style={{ left: "14%", right: "14%", width: "72%", height: "2px" }}
+              viewBox="0 0 100 2" preserveAspectRatio="none">
+              <line x1="0" y1="1" x2="100" y2="1" stroke="#F29700" strokeWidth="0.4" strokeDasharray="2 2" strokeOpacity="0.5" />
+            </svg>
+
+            <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
+              {t.process.steps.map((step, i) => (
+                <motion.div key={i}
+                  initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: i * 0.1 }}
+                  className="flex flex-col items-center text-center">
+                  {/* Circle */}
+                  <div className="relative mb-6">
+                    <div className="w-24 h-24 rounded-full border-2 flex items-center justify-center"
+                      style={{ borderColor: "#F29700" }}>
+                      <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "2.25rem", color: "#F29700" }}>{step.num}</span>
+                    </div>
+                    {/* Badge tag */}
+                    <span className="absolute -bottom-2 -right-1 text-[0.6rem] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full text-sand-100"
+                      style={{ background: "var(--color-ocean-600)", letterSpacing: "0.12em" }}>
+                      {step.tag}
+                    </span>
                   </div>
-                  <p className="font-black text-slate-900 text-sm leading-tight" style={{ fontFamily: "Outfit, sans-serif" }}>{title}</p>
-                  <p className="text-slate-400 text-xs mt-1">{sub}</p>
-                </div>
+                  <h3 className="font-display font-semibold text-ocean-600 text-xl mb-2">{step.title}</h3>
+                  <p className="text-ocean-400/70 text-sm leading-relaxed max-w-xs">{step.desc}</p>
+                </motion.div>
               ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── thin divider ── */}
-      <div className="h-px bg-gradient-to-r from-transparent via-slate-100 to-transparent mx-5" />
-
-      {/* ══════════════════════════════════════════
-          CHAPTER 2 — JOBS
-      ══════════════════════════════════════════ */}
-      <section id="jobs" className="relative py-28 overflow-hidden section-alt">
-        <GridPattern className="text-emerald-600" opacity={0.06} width={56} height={56} />
-        <span className="watermark text-emerald-500">02</span>
-        <div className="max-w-7xl mx-auto px-5 relative z-10" ref={r2}>
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div className="reveal order-last lg:order-first">
-              <div className="relative rounded-[2.5rem] overflow-hidden aspect-[4/3] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.12)]">
-                <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?q=80&w=1200&auto=format&fit=crop"
-                  alt="Team at work" loading="lazy" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/50 to-transparent" />
-                <div className="absolute bottom-6 left-6 glass-white rounded-2xl px-4 py-3">
-                  <p className="text-slate-900 font-black text-sm">🌿 Melbourne CBD</p>
-                  <p className="text-slate-500 text-xs">{lang === "FR" ? "Réseau local actif" : "Active local network"}</p>
-                </div>
-              </div>
+      {/* ── 05. PILLARS BENTO ── */}
+      <section className="relative py-24 overflow-hidden" style={{ background: "var(--color-bg-alt)" }}>
+        <GridPattern opacity={0.05} />
+        <div className="relative max-w-7xl mx-auto px-5">
+          {/* Header */}
+          <div className="grid lg:grid-cols-12 gap-8 mb-14 items-end">
+            <div className="lg:col-span-7">
+              <motion.span
+                initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0 }}
+                className="pill-kicker">{t.pillars.kicker}
+              </motion.span>
+              <motion.h2
+                initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.05 }}
+                className="font-display font-bold text-ocean-600"
+                style={{ fontSize: "clamp(2rem, 3.8vw, 3rem)", letterSpacing: "-0.02em" }}>
+                {t.pillars.h2}
+              </motion.h2>
             </div>
-            <div>
-              <p className="reveal text-xs font-black uppercase tracking-[.25em] text-emerald-600 mb-4">{S.ch2.eyebrow}</p>
-              <h2 className="reveal reveal-delay-1 text-4xl sm:text-6xl font-black text-slate-900 leading-[.96] tracking-tight mb-4" style={{ fontFamily: "Outfit, sans-serif" }}>
-                {S.ch2.h}
-              </h2>
-              <p className="reveal reveal-delay-2 text-lg text-emerald-600 font-semibold mb-5 chapter-accent-left" style={{ borderColor: "#10b981" }}>{S.ch2.sub}</p>
-              <p className="reveal reveal-delay-2 text-slate-500 text-lg leading-relaxed mb-8">
-                <TextGenerateEffect text={S.ch2.body} />
-              </p>
-              <div className="reveal reveal-delay-3 space-y-3 mb-10">
-                {(lang === "FR"
-                  ? ["Conseils personnalisés pour ta recherche d'emploi", "Mise en relation avec notre réseau local à Melbourne", "Infos sur les secteurs qui recrutent en ce moment"]
-                  : ["Personalised job search advice", "Introductions to our local Melbourne network", "Info on sectors currently hiring"]
-                ).map((item, i) => (
-                  <div key={i} className="flex items-start gap-3 text-slate-600 text-sm">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />{item}
-                  </div>
-                ))}
-              </div>
-              <a href={wa} target="_blank" rel="noopener noreferrer"
-                className="reveal reveal-delay-4 inline-flex items-center gap-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm uppercase tracking-wide px-8 py-4 rounded-2xl transition-all shadow-lg shadow-emerald-600/20 btn-shine">
-                <MessageCircle className="w-5 h-5" />
-                {lang === "FR" ? "Trouver un job" : "Find a job"}
-              </a>
-            </div>
+            <motion.p
+              initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.1 }}
+              className="lg:col-span-5 text-ocean-400/70 text-base leading-relaxed">
+              {t.pillars.intro}
+            </motion.p>
           </div>
-        </div>
-      </section>
 
-      <div className="h-px bg-gradient-to-r from-transparent via-slate-100 to-transparent mx-5" />
-
-      {/* ══════════════════════════════════════════
-          CHAPTER 3 — S'INSTALLER
-      ══════════════════════════════════════════ */}
-      <section id="install" className="relative py-28 overflow-hidden bg-white">
-        <span className="watermark text-orange-400">03</span>
-        <div className="max-w-7xl mx-auto px-5 relative z-10" ref={r3}>
-          <div className="max-w-3xl mx-auto text-center mb-16">
-            <p className="reveal text-xs font-black uppercase tracking-[.25em] text-orange-500 mb-4">{S.ch3.eyebrow}</p>
-            <h2 className="reveal reveal-delay-1 text-4xl sm:text-6xl font-black text-slate-900 leading-[.96] tracking-tight mb-4" style={{ fontFamily: "Outfit, sans-serif" }}>
-              {S.ch3.h}
-            </h2>
-            <p className="reveal reveal-delay-2 text-lg text-orange-600 font-semibold mb-5">{S.ch3.sub}</p>
-            <p className="reveal reveal-delay-2 text-slate-500 text-lg leading-relaxed">
-              <TextGenerateEffect text={S.ch3.body} />
-            </p>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {t.services.items.map((item, i) => {
-              const Icon = serviceIcons[i];
+          {/* Items list — alternating layout */}
+          <div className="space-y-3">
+            {t.pillars.items.map((item, i) => {
+              const Icon = iconMap[item.icon] || ShieldCheck;
+              const isFeature = i === 2; // item du milieu = feature ocean dark
               return (
-                <MagicCard
-                  key={i}
-                  spotlightColor="rgba(249, 115, 22, 0.18)"
-                  borderGradient="rgba(249, 115, 22, 0.55)"
-                  className={`reveal card-lift bg-white rounded-[2rem] border border-slate-100 shadow-sm reveal-delay-${Math.min(i + 1, 4)}`}
-                >
-                  <div className="p-8">
-                    <div className="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center text-orange-500 mb-6">
-                      <Icon className="w-6 h-6" />
-                    </div>
-                    <h3 className="font-black text-slate-900 text-xl mb-3" style={{ fontFamily: "Outfit, sans-serif" }}>{item.title}</h3>
-                    <p className="text-slate-500 text-sm leading-relaxed">{item.desc}</p>
+                <motion.div key={i}
+                  initial={{ opacity: 0, x: i % 2 === 0 ? -16 : 16 }} whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, amount: 0.25 }}
+                  transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: i * 0.07 }}
+                  className="rounded-[18px] px-7 py-6 border flex items-start gap-5 group transition-all duration-300 hover:-translate-y-0.5"
+                  style={isFeature
+                    ? { background: "var(--color-ocean-600)", borderColor: "transparent" }
+                    : { background: "var(--color-bg)", borderColor: "rgba(30,58,74,0.08)" }}>
+                  {/* Icon pill */}
+                  <div className="shrink-0 w-11 h-11 rounded-full flex items-center justify-center mt-0.5"
+                    style={{ background: isFeature ? "rgba(244,237,224,0.12)" : "rgba(242,151,0,0.1)" }}>
+                    <Icon className="w-5 h-5" style={{ color: isFeature ? "#F5C158" : "#F29700" }} />
                   </div>
-                </MagicCard>
+                  {/* Number */}
+                  <div className="hidden sm:block shrink-0 pt-0.5">
+                    <span className="text-xs font-bold uppercase tracking-[0.18em]"
+                      style={{ color: isFeature ? "rgba(244,237,224,0.25)" : "var(--color-ink-soft)", opacity: 0.5 }}>
+                      {item.num}
+                    </span>
+                  </div>
+                  {/* Text */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className={`font-display font-semibold text-lg mb-1 ${isFeature ? "text-sand-100" : "text-ocean-600"}`}>
+                      {item.title}
+                    </h3>
+                    <p className={`text-sm leading-relaxed ${isFeature ? "text-sand-200/65" : "text-ocean-400/70"}`}>
+                      {item.desc}
+                    </p>
+                  </div>
+                </motion.div>
               );
             })}
           </div>
-          <div className="reveal reveal-delay-4 text-center mt-12">
-            <a href={wa} target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2.5 bg-orange-500 hover:bg-orange-400 text-white font-black text-sm uppercase tracking-wide px-8 py-4 rounded-2xl transition-all shadow-lg shadow-orange-500/20 btn-shine">
-              <MessageCircle className="w-5 h-5" />
-              {lang === "FR" ? "S'installer" : "Settle in"}
-            </a>
-          </div>
-          <div className="reveal mt-8 p-5 bg-slate-50 rounded-2xl border border-slate-100 flex gap-3 items-start max-w-3xl mx-auto">
-            <ShieldCheck className="w-5 h-5 text-orange-400 shrink-0 mt-0.5" />
-            <p className="text-slate-400 text-sm leading-relaxed">{t.services.disclaimer}</p>
+        </div>
+      </section>
+
+      {/* ── 05b. FONDATEUR — Paul ── */}
+      <section className="relative py-20 overflow-hidden" style={{ background: "var(--color-bg)" }}>
+        <div className="max-w-7xl mx-auto px-5">
+          <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-center">
+            {/* Photo Paul */}
+            <motion.div
+              className="lg:col-span-4"
+              initial={{ opacity: 0, x: -24 }} whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}>
+              <div className="relative rounded-[22px] overflow-hidden aspect-[4/5] shadow-[0_32px_64px_-12px_rgba(30,58,74,0.15)]">
+                <img
+                  src="/paul.jpg"
+                  alt="Paul — fondateur d'OZ Connection, Melbourne"
+                  className="w-full h-full object-cover object-top"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-ocean-900/70 via-transparent to-transparent" />
+                <div className="absolute bottom-5 left-5 right-5">
+                  <p className="text-sand-100 font-display font-semibold text-sm">
+                    Paul · {lang === "FR" ? "Fondateur" : "Founder"}, OZ Connection
+                  </p>
+                  <p className="text-sand-100/50 text-xs mt-0.5">Melbourne · Naarm</p>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Text */}
+            <div className="lg:col-span-8">
+              <motion.span
+                initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.25 }}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0 }}
+                className="pill-kicker">
+                {lang === "FR" ? "Le fondateur" : "The founder"}
+              </motion.span>
+              <motion.h2
+                initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.25 }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.05 }}
+                className="font-display font-bold text-ocean-600 mb-5"
+                style={{ fontSize: "clamp(1.75rem, 3.2vw, 2.5rem)", letterSpacing: "-0.02em" }}>
+                {lang === "FR"
+                  ? "Une vraie expérience. Un accompagnement pratique."
+                  : "Real experience. Practical support."}
+              </motion.h2>
+              <div className="space-y-4 text-ocean-400/75 text-base leading-relaxed">
+                <motion.p
+                  initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.25 }}
+                  transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.1 }}>
+                  {lang === "FR"
+                    ? "Paul, le fondateur d'OZ Connection, est basé à Melbourne avec plus de 8 ans d'expérience réelle de vie et de travail en Australie."
+                    : "Paul, the founder of OZ Connection, is based in Melbourne with over 8 years of real experience living and working in Australia."}
+                </motion.p>
+                <motion.p
+                  initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.25 }}
+                  transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.15 }}>
+                  {lang === "FR"
+                    ? "Après être lui-même passé par les galères de l'arrivée, Paul a créé OZ Connection pour aider les nouveaux arrivants à éviter les erreurs classiques, gagner du temps et commencer avec des étapes plus claires."
+                    : "After going through the same arrival challenges himself, Paul built OZ Connection to help newcomers avoid common mistakes, save time and start with clearer steps."}
+                </motion.p>
+                <motion.p
+                  initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.25 }}
+                  transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.2 }}
+                  className="border-l-2 pl-4 italic font-display text-ocean-600/80 text-base"
+                  style={{ borderColor: "var(--color-accent)" }}>
+                  {lang === "FR"
+                    ? "OZ Connection est construit autour d'un accompagnement pratique, pas de conseils génériques trouvés en ligne."
+                    : "OZ Connection is built around practical support, not generic advice found online."}
+                </motion.p>
+              </div>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.25 }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.25 }}
+                className="mt-6 inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-medium"
+                style={{ background: "var(--color-bg-alt)", border: "1px solid var(--color-line)", color: "var(--color-ink-soft)" }}>
+                <span className="w-1.5 h-1.5 rounded-full bg-terra-400" />
+                {lang === "FR" ? "Support disponible en français et en anglais" : "Support available in French and English"}
+              </motion.div>
+            </div>
           </div>
         </div>
       </section>
 
-      <div className="h-px bg-gradient-to-r from-transparent via-slate-100 to-transparent mx-5" />
+      {/* ── 06. FOR WHOM / NOT FOR WHOM ── */}
+      <section className="relative py-24 overflow-hidden" style={{ background: "var(--color-bg)" }}>
+        <div className="max-w-7xl mx-auto px-5">
+          <div className="text-center mb-14">
+            <motion.span
+              initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0 }}
+              className="pill-kicker">{t.forWhom.kicker}
+            </motion.span>
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Pour toi */}
+            <motion.div
+              initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.05 }}
+              className="rounded-[18px] p-8 border border-ocean-400/10"
+              style={{ background: "var(--color-bg-alt)" }}>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{ background: "rgba(242,151,0,0.12)" }}>
+                  <CheckCircle2 className="w-5 h-5" style={{ color: "#F29700" }} />
+                </div>
+                <h3 className="font-display font-semibold text-ocean-600 text-xl">{t.forWhom.forTitle}</h3>
+              </div>
+              <ul className="space-y-3">
+                {t.forWhom.forItems.map((item, i) => (
+                  <li key={i} className="flex items-start gap-2.5 text-ocean-600/80 text-sm">
+                    <span className="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style={{ background: "#F29700" }} />{item}
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
 
-      {/* ══════════════════════════════════════════
-          CHAPTER 4 — VISA
-      ══════════════════════════════════════════ */}
-      <section id="visa" className="relative py-28 overflow-hidden section-alt">
-        <GridPattern className="text-indigo-500" opacity={0.05} width={48} height={48} />
-        <span className="watermark text-indigo-400">04</span>
-        <div className="max-w-7xl mx-auto px-5 relative z-10" ref={r4}>
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div>
-              <p className="reveal text-xs font-black uppercase tracking-[.25em] text-indigo-500 mb-4">{S.ch4.eyebrow}</p>
-              <h2 className="reveal reveal-delay-1 text-4xl sm:text-6xl font-black text-slate-900 leading-[.96] tracking-tight mb-4" style={{ fontFamily: "Outfit, sans-serif" }}>
-                {S.ch4.h}
-              </h2>
-              <p className="reveal reveal-delay-2 text-lg text-indigo-600 font-semibold mb-5 chapter-accent-left" style={{ borderColor: "#6366f1" }}>{S.ch4.sub}</p>
-              <p className="reveal reveal-delay-2 text-slate-500 text-lg leading-relaxed mb-8">
-                <TextGenerateEffect text={S.ch4.body} />
-              </p>
-              <div className="reveal reveal-delay-3 flex flex-wrap gap-2.5 mb-10">
-                {(lang === "FR"
-                  ? ["Visa étudiant", "Travailleur qualifié", "Visa partenaire", "Working Holiday", "Visa tourisme"]
-                  : ["Student visa", "Skilled worker", "Partner visa", "Working Holiday", "Tourist visa"]
-                ).map((v, i) => (
-                  <span key={i} className="bg-indigo-50 text-indigo-700 text-xs font-bold px-4 py-2 rounded-full border border-indigo-100">{v}</span>
+            {/* Pas pour toi */}
+            <motion.div
+              initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.1 }}
+              className="rounded-[18px] p-8 border border-ocean-400/10"
+              style={{ background: "rgba(30,58,74,0.04)" }}>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{ background: "rgba(52,82,102,0.12)" }}>
+                  <XCircle className="w-5 h-5 text-ocean-400" />
+                </div>
+                <h3 className="font-display font-semibold text-ocean-600 text-xl">{t.forWhom.notTitle}</h3>
+              </div>
+              <ul className="space-y-3">
+                {t.forWhom.notItems.map((item, i) => (
+                  <li key={i} className="flex items-start gap-2.5 text-ocean-600/70 text-sm">
+                    <span className="w-4 h-0.5 bg-ocean-400/40 shrink-0 mt-2" />{item}
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 07. PACKS TEASER (dark section) ── */}
+      <section className="relative py-24 overflow-hidden" style={{ background: "var(--color-ocean-600)" }}>
+        <GridPattern opacity={0.04} light />
+        <Spotlight color="#F29700" x="10%" y="15%" size="40%" opacity={0.35} />
+        <Spotlight color="#F5C158" x="90%" y="85%" size="35%" opacity={0.25} />
+
+        <div className="relative max-w-7xl mx-auto px-5">
+          <div className="grid lg:grid-cols-12 gap-10 items-start">
+            {/* Left: text */}
+            <div className="lg:col-span-7">
+              <motion.span
+                initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0 }}
+                className="pill-kicker pill-kicker-orange mb-6 inline-block">
+                {lang === "FR" ? "05 · Nos packs" : "05 · Our packs"}
+              </motion.span>
+              <motion.h2
+                initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.05 }}
+                className="font-display font-bold text-sand-100 mb-4"
+                style={{ fontSize: "clamp(2rem, 3.8vw, 3rem)", letterSpacing: "-0.02em" }}>
+                {lang === "FR" ? "Choisis le bon niveau d'accompagnement." : "Choose the right level of support."}
+              </motion.h2>
+              <motion.p
+                initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.1 }}
+                className="text-sand-200/60 text-lg mb-8 max-w-xl">
+                {lang === "FR"
+                  ? "Trois packs pensés pour trois moments différents de ton aventure."
+                  : "Three packs designed for three different moments of your journey."}
+              </motion.p>
+              <motion.div
+                initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.15 }}>
+                <Link href="/packages" className="btn-primary btn-shine">
+                  {lang === "FR" ? "Voir tous les packs" : "View all packs"}
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </motion.div>
+            </div>
+
+            {/* Right: 3 MagicCards */}
+            <div className="lg:col-span-5">
+              <div className="flex flex-col gap-4">
+                {[
+                  { name: lang === "FR" ? "Australia Starter" : "Australia Starter", price: "$99", tagline: lang === "FR" ? "Les essentiels de l'arrivée" : "Arrival essentials", highlight: false },
+                  { name: lang === "FR" ? "Melbourne Ready" : "Melbourne Ready", price: "$299", tagline: lang === "FR" ? "Tes 2 premières semaines préparées" : "Your first 2 weeks prepared", highlight: true },
+                  { name: lang === "FR" ? "Melbourne Arrival" : "Melbourne Arrival", price: "$899", tagline: lang === "FR" ? "Tout organisé avant d'atterrir" : "Everything organised before landing", highlight: false },
+                ].map((pack, i) => (
+                  <motion.div key={i}
+                    initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.1 + i * 0.08 }}>
+                    <MagicCard highlight={pack.highlight}>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className={`font-display font-semibold text-lg ${pack.highlight ? "text-white" : "text-sand-100"}`}>
+                            {pack.name}
+                          </p>
+                          <p className={`text-xs mt-0.5 ${pack.highlight ? "text-white/70" : "text-sand-200/50"}`}>
+                            {pack.tagline}
+                          </p>
+                        </div>
+                        <span className="font-display font-bold text-2xl" style={{ color: pack.highlight ? "#fff" : "#F5C158" }}>
+                          {pack.price}
+                        </span>
+                      </div>
+                    </MagicCard>
+                  </motion.div>
                 ))}
               </div>
-              <a href={wa} target="_blank" rel="noopener noreferrer"
-                className="reveal reveal-delay-4 inline-flex items-center gap-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-sm uppercase tracking-wide px-8 py-4 rounded-2xl transition-all shadow-lg shadow-indigo-600/20 btn-shine">
-                <MessageCircle className="w-5 h-5" />
-                {lang === "FR" ? "Explorer mes options" : "Explore my options"}
-              </a>
             </div>
-            <div className="reveal reveal-delay-2">
-              <div className="relative rounded-[2.5rem] overflow-hidden aspect-square shadow-[0_30px_60px_-15px_rgba(0,0,0,0.12)]">
-                <img src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=1000&auto=format&fit=crop"
-                  alt="Visa documents" loading="lazy" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/50 to-transparent" />
-                <div className="absolute bottom-6 left-6 right-6 glass-white rounded-2xl px-5 py-4">
-                  <p className="text-slate-900 font-black text-sm mb-0.5">{lang === "FR" ? "Agent partenaire MARA" : "MARA Partner Agent"}</p>
-                  <p className="text-slate-500 text-xs">{lang === "FR" ? "Enregistré officiellement · Melbourne" : "Officially registered · Melbourne"}</p>
-                </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 08. SERVICES À LA CARTE TEASER ── */}
+      <section className="relative py-24 overflow-hidden" style={{ background: "var(--color-bg-alt)" }}>
+        <GridPattern opacity={0.05} />
+        <div className="relative max-w-7xl mx-auto px-5">
+          <div className="grid lg:grid-cols-12 gap-10 items-start">
+            {/* Left: text */}
+            <div className="lg:col-span-5">
+              <motion.span
+                initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0 }}
+                className="pill-kicker">{t.servicesTeaser.kicker}
+              </motion.span>
+              <motion.h2
+                initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.05 }}
+                className="font-display font-bold text-ocean-600 mb-4"
+                style={{ fontSize: "clamp(2rem, 3.8vw, 3rem)", letterSpacing: "-0.02em" }}>
+                {t.servicesTeaser.h2}
+              </motion.h2>
+              <motion.p
+                initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.1 }}
+                className="text-ocean-400/70 text-base leading-relaxed mb-6 max-w-sm">
+                {t.servicesTeaser.body}
+              </motion.p>
+              <motion.div
+                initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.12 }}>
+                <Link href="/packages"
+                  className="font-semibold text-sm underline decoration-dashed underline-offset-4 transition-colors" style={{ color: "#F29700" }}>
+                  {t.servicesTeaser.cta}
+                </Link>
+              </motion.div>
+            </div>
+
+            {/* Right: 6 mini-cards grid */}
+            <div className="lg:col-span-7">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {t.servicesTeaser.items.map((svc, i) => {
+                  const Icon = iconMap[svc.icon] || FileText;
+                  return (
+                    <motion.div key={i}
+                      initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.08 + i * 0.06 }}>
+                      <Link href={`/packages`}
+                        className="flex flex-col gap-2 p-4 rounded-[18px] border group transition-colors"
+                        style={{ borderColor: "rgba(30,58,74,0.1)", background: "var(--color-bg)" }}>
+                        <div className="flex items-center justify-between">
+                          <div className="w-9 h-9 rounded-full flex items-center justify-center"
+                            style={{ background: "rgba(242,151,0,0.1)" }}>
+                            <Icon className="w-4 h-4" style={{ color: "#F29700" }} />
+                          </div>
+                          <ArrowRight className="w-3.5 h-3.5 transition-colors" style={{ color: "rgba(52,82,102,0.4)" }} />
+                        </div>
+                        <p className="font-display font-medium text-ocean-600 text-sm leading-tight">{svc.name}</p>
+                        <p className="text-xs text-ocean-400/50">{svc.price}</p>
+                      </Link>
+                    </motion.div>
+                  );
+                })}
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <div className="h-px bg-gradient-to-r from-transparent via-slate-100 to-transparent mx-5" />
+      {/* ── 08b. STUDENT VISA ── */}
+      <section className="relative py-20 overflow-hidden" style={{ background: "var(--color-ocean-600)" }}>
+        {/* Subtle orange glow top-right */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] pointer-events-none"
+          style={{ background: "radial-gradient(ellipse 50% 50% at 90% 10%, rgba(242,151,0,0.18), transparent 70%)" }} />
 
-      {/* ══════════════════════════════════════════
-          ABOUT — PAUL
-      ══════════════════════════════════════════ */}
-      <section id="about" className="relative py-28 overflow-hidden bg-white">
-        <div className="max-w-7xl mx-auto px-5 relative z-10" ref={r5}>
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div className="reveal">
-              <div className="relative rounded-[2.5rem] overflow-hidden aspect-[4/5] shadow-[0_40px_80px_-15px_rgba(0,0,0,0.1)]">
-                <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=900&auto=format&fit=crop"
-                  alt="Paul and team" loading="lazy" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
-                <div className="absolute bottom-8 left-8 right-8 flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl border-2 border-amber-400 overflow-hidden shrink-0">
-                    <img src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=100&auto=format&fit=crop" alt="Paul" className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <p className="text-white font-black text-lg" style={{ fontFamily: "Outfit, sans-serif" }}>Paul</p>
-                    <p className="text-amber-400 text-xs uppercase tracking-widest font-bold">Founder · 8 years in Oz</p>
-                  </div>
-                </div>
-              </div>
+        <div className="relative max-w-7xl mx-auto px-5">
+          {/* Top: kicker + headline + body in a row */}
+          <div className="grid lg:grid-cols-12 gap-8 lg:gap-16 items-end mb-14">
+            <div className="lg:col-span-7">
+              <Reveal>
+                <span className="inline-block mb-5 text-xs font-bold uppercase tracking-[0.1em] px-4 py-1.5 rounded-full"
+                  style={{ background: "rgba(242,151,0,0.18)", border: "1px solid rgba(242,151,0,0.35)", color: "#F5C158" }}>
+                  {t.studentVisa.kicker}
+                </span>
+              </Reveal>
+              <Reveal delay={0.05}>
+                <h2 className="font-display font-bold text-sand-100 leading-[1.05]"
+                  style={{ fontSize: "clamp(2rem, 3.8vw, 3rem)", letterSpacing: "-0.025em" }}>
+                  {t.studentVisa.h2}
+                </h2>
+              </Reveal>
             </div>
-            <div>
-              <p className="reveal text-xs font-black uppercase tracking-[.25em] text-amber-500 mb-4">{t.paul.badge}</p>
-              <h2 className="reveal reveal-delay-1 text-4xl sm:text-5xl font-black text-slate-900 leading-tight tracking-tight mb-6" style={{ fontFamily: "Outfit, sans-serif" }}>
-                {t.paul.title} <span className="shimmer">{t.paul.titleAccent}</span>
-              </h2>
-              <div className="space-y-4 text-slate-500 text-lg leading-relaxed mb-8">
-                <p className="reveal reveal-delay-1 font-bold text-slate-900 text-xl">{t.paul.greeting}</p>
-                <p className="reveal reveal-delay-2">{t.paul.p1}</p>
-                <p className="reveal reveal-delay-2">{t.paul.p2}</p>
-                <div className="reveal reveal-delay-3 border-l-4 border-amber-400 pl-5 py-1">
-                  <p className="italic text-slate-600">{t.paul.p3}</p>
-                </div>
-              </div>
-              <div className="reveal reveal-delay-4 grid sm:grid-cols-2 gap-4">
-                <div className="bg-emerald-50 rounded-2xl p-5 border border-emerald-100">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Check className="w-4 h-4 text-emerald-600" />
-                    <span className="text-emerald-800 font-black text-xs uppercase tracking-wider">{t.paul.whatWeDo}</span>
-                  </div>
-                  <p className="text-slate-500 text-sm leading-relaxed">{t.paul.whatWeDoDesc}</p>
-                </div>
-                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
-                  <div className="flex items-center gap-2 mb-2">
-                    <X className="w-4 h-4 text-slate-400" />
-                    <span className="text-slate-600 font-black text-xs uppercase tracking-wider">{t.paul.whatWeDontDo}</span>
-                  </div>
-                  <p className="text-slate-500 text-sm leading-relaxed">{t.paul.whatWeDontDoDesc}</p>
-                </div>
-              </div>
+            <div className="lg:col-span-5">
+              <Reveal delay={0.1}>
+                <p className="text-sand-200/55 text-base leading-relaxed mb-6">
+                  {t.studentVisa.body}
+                </p>
+                <a href={wa} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2.5 font-bold text-sm px-7 py-4 rounded-full transition-all btn-shine"
+                  style={{ background: "#F29700", color: "#fff", boxShadow: "0 4px 20px rgba(242,151,0,0.4)" }}>
+                  <MessageCircle className="w-4 h-4" />
+                  {t.studentVisa.cta}
+                </a>
+              </Reveal>
             </div>
+          </div>
+
+          {/* Divider */}
+          <div className="h-px mb-10" style={{ background: "rgba(244,237,224,0.08)" }} />
+
+          {/* 4 points as horizontal numbered list */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-0">
+            {t.studentVisa.points.map((pt, i) => (
+              <motion.div key={i}
+                initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.25 }}
+                transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: i * 0.07 }}
+                className="pr-8 lg:border-r last:border-r-0 lg:pl-8 first:pl-0 py-2"
+                style={{ borderColor: "rgba(244,237,224,0.08)" }}>
+                <p className="font-display font-bold text-3xl mb-3" style={{ color: "rgba(242,151,0,0.25)" }}>
+                  {String(i + 1).padStart(2, "0")}
+                </p>
+                <p className="font-display font-semibold text-sand-100 text-sm mb-1.5 leading-snug">{pt.title}</p>
+                <p className="text-sand-200/45 text-xs leading-relaxed">{pt.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Disclaimer strip */}
+          <div className="mt-10 flex items-start gap-2.5 border-t pt-6"
+            style={{ borderColor: "rgba(244,237,224,0.07)" }}>
+            <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: "rgba(242,151,0,0.5)" }} />
+            <p className="text-sand-100/25 text-xs leading-relaxed">{t.studentVisa.disclaimer}</p>
           </div>
         </div>
       </section>
 
-      <div className="h-px bg-gradient-to-r from-transparent via-slate-100 to-transparent mx-5" />
-
-      {/* ══════════════════════════════════════════
-          TESTIMONIALS
-      ══════════════════════════════════════════ */}
-      <section id="temoignages" className="relative py-24 overflow-hidden section-alt">
-        <div className="max-w-7xl mx-auto px-5 relative z-10" ref={r6}>
+      {/* ── WHY MELBOURNE ── */}
+      <section className="relative py-24 overflow-hidden" style={{ background: "var(--color-bg-alt)" }}>
+        <GridPattern opacity={0.05} />
+        <div className="relative max-w-7xl mx-auto px-5">
           <div className="text-center mb-14">
-            <p className="reveal text-xs font-black uppercase tracking-[.25em] text-amber-500 mb-4">{t.testimonials.badge}</p>
-            <h2 className="reveal reveal-delay-1 text-4xl sm:text-5xl font-black text-slate-900 tracking-tight" style={{ fontFamily: "Outfit, sans-serif" }}>
-              {t.testimonials.title} <span className="shimmer">{t.testimonials.titleAccent}</span>
-            </h2>
+            <motion.span
+              initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
+              className="pill-kicker">{t.whyMelbourne.badge}
+            </motion.span>
+            <motion.h2
+              initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.05 }}
+              className="font-display font-bold text-ocean-600 mb-4"
+              style={{ fontSize: "clamp(2rem, 3.8vw, 3rem)", letterSpacing: "-0.02em" }}>
+              {t.whyMelbourne.title}
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.12 }}
+              className="italic font-display text-ocean-400/60 text-sm border-l-2 pl-4 max-w-xl mx-auto leading-relaxed text-left"
+              style={{ borderColor: "var(--color-terra-300)" }}>
+              {t.whyMelbourne.proof}
+            </motion.p>
           </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {t.testimonials.items.map((item, i) => (
-              <MagicCard
-                key={i}
-                spotlightColor="rgba(245, 158, 11, 0.16)"
-                borderGradient="rgba(245, 158, 11, 0.55)"
-                className={`reveal card-lift bg-white rounded-[2rem] border border-slate-100 shadow-sm reveal-delay-${i + 1}`}
-              >
-                <div className="p-8 flex flex-col h-full">
-                  <div className="flex gap-1 mb-5">
-                    {[...Array(5)].map((_, si) => <Star key={si} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
-                  </div>
-                  <Quote className="w-8 h-8 text-amber-100 mb-3" />
-                  <p className="text-slate-500 italic text-base leading-relaxed flex-grow mb-6">&ldquo;{item.text}&rdquo;</p>
-                  <div className="flex items-center gap-3 pt-5 border-t border-slate-50">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-black text-sm">
-                      {item.name.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="font-black text-slate-900 text-sm">{item.name}</p>
-                      <p className="text-slate-400 text-xs flex items-center gap-1 mt-0.5">
-                        <MapPin className="w-3 h-3 text-amber-400" />{item.origin ?? "Australia"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </MagicCard>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      <div className="h-px bg-gradient-to-r from-transparent via-slate-100 to-transparent mx-5" />
-
-      {/* ══════════════════════════════════════════
-          PARENTS
-      ══════════════════════════════════════════ */}
-      <section id="parents" className="relative py-24 overflow-hidden bg-white">
-        <div className="max-w-5xl mx-auto px-5 relative z-10" ref={r7}>
-          <div className="reveal bg-gradient-to-br from-amber-50 to-orange-50 rounded-[3rem] p-12 sm:p-16 text-center border border-amber-100 relative overflow-hidden">
-            <div className="absolute -top-10 -right-10 w-64 h-64 rounded-full bg-amber-200/20 pointer-events-none" />
-            <p className="text-xs font-black uppercase tracking-[.25em] text-amber-600 mb-5">{t.parents.badge}</p>
-            <h2 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight mb-5 relative z-10" style={{ fontFamily: "Outfit, sans-serif" }}>
-              {t.parents.title} <span className="shimmer">{t.parents.titleAccent}</span>
-            </h2>
-            <p className="text-slate-900 font-bold text-xl mb-4 max-w-xl mx-auto">{t.parents.p1}</p>
-            <p className="text-slate-500 text-lg leading-relaxed mb-8 max-w-2xl mx-auto">{t.parents.p2}</p>
-            <div className="flex flex-wrap justify-center gap-3 mb-10">
-              {t.parents.features.map((f, i) => (
-                <div key={i} className="flex items-center gap-2 bg-white/70 px-4 py-2.5 rounded-full border border-amber-100 text-slate-700 text-sm font-semibold">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />{f}
-                </div>
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <div className="space-y-0">
+              {t.whyMelbourne.points.map((pt, i) => (
+                <motion.div key={i}
+                  initial={{ opacity: 0, x: -24 }} whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, amount: 0.35 }}
+                  transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: i * 0.09 }}
+                  className="group flex items-start gap-5 py-6 border-b"
+                  style={{ borderColor: "var(--color-line)" }}>
+                  <div className="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center font-bold text-sm text-white group-hover:scale-105 transition-transform duration-200"
+                    style={{ fontFamily: "var(--font-display)", background: "linear-gradient(135deg, var(--color-terra-400), var(--color-terra-500))", boxShadow: "0 4px 16px rgba(242,151,0,0.25)" }}>
+                    {String(i + 1).padStart(2, "0")}
+                  </div>
+                  <div className="flex-1 pt-1">
+                    <p className="font-display font-semibold text-base mb-1 transition-colors duration-200" style={{ color: "#1E3A4A" }}>{pt.title}</p>
+                    <p className="text-ocean-400/65 text-sm leading-relaxed">{pt.desc}</p>
+                  </div>
+                </motion.div>
               ))}
             </div>
-            <a href={wa} target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2.5 bg-slate-900 hover:bg-amber-500 text-white font-black text-sm uppercase tracking-wide px-8 py-4 rounded-2xl transition-all shadow-lg btn-shine">
-              <MessageCircle className="w-5 h-5" />{t.parents.cta}
-            </a>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.97 }} whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}>
+              <div className="relative rounded-[22px] overflow-hidden aspect-[4/3] shadow-[0_32px_64px_-12px_rgba(30,58,74,0.15)]">
+                <img
+                  src="/st-kilda-luna-park.jpg"
+                  alt="St Kilda Luna Park Melbourne"
+                  loading="lazy"
+                  className="w-full h-full object-cover scale-105 hover:scale-100 transition-transform duration-700"
+                  style={{ filter: "contrast(1.06) saturate(1.15) brightness(1.03)" }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-ocean-900/60 via-ocean-900/10 to-transparent" />
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                  className="absolute bottom-5 left-5 right-5 rounded-[14px] px-5 py-4"
+                  style={{ background: "rgba(244,237,224,0.92)", backdropFilter: "blur(12px)" }}>
+                  <p className="text-ocean-600 font-display font-semibold text-sm flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    St Kilda · Melbourne
+                  </p>
+                  <p className="text-ocean-400/60 text-xs mt-0.5">
+                    {lang === "FR" ? "Meilleure ville du monde — Time Out 2026" : "World's best city — Time Out 2026"}
+                  </p>
+                </motion.div>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════
-          CONTACT
-      ══════════════════════════════════════════ */}
-      <section id="contact" className="relative bg-slate-950 py-36 overflow-hidden text-center">
-        <Spotlight className="-top-40 left-0 md:-left-32 md:-top-20 h-[140%] w-[140%]" fill="#f59e0b" />
-        <Spotlight className="bottom-0 right-0 h-[80%] w-[80%]" fill="#f97316" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(245,158,11,0.1)_0%,transparent_65%)]" />
-        <div className="max-w-3xl mx-auto px-5 relative z-10">
+      {/* ── 09. FAQ ── */}
+      <section className="relative py-24 overflow-hidden border-y"
+        style={{ background: "var(--color-bg-alt)", borderColor: "var(--color-line)" }}>
+        <div className="max-w-4xl mx-auto px-5">
+          <div className="text-center mb-12">
+            <motion.span
+              initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0 }}
+              className="pill-kicker">{t.faq.badge}
+            </motion.span>
+            <motion.h2
+              initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.05 }}
+              className="font-display font-bold text-ocean-600"
+              style={{ fontSize: "clamp(2rem, 3.8vw, 3rem)", letterSpacing: "-0.02em" }}>
+              {t.faq.title}
+            </motion.h2>
+          </div>
+
           <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: .8, ease: [.22, 1, .36, 1] }}
-          >
-            <p className="text-amber-400 text-xs font-black uppercase tracking-[.25em] mb-8">
-              {lang === "FR" ? "On est là pour toi" : "We're here for you"}
-            </p>
-            <h2 className="text-5xl sm:text-7xl font-black text-white tracking-tighter leading-[.9] mb-8" style={{ fontFamily: "Outfit, sans-serif" }}>
-              {t.contact.title}<br /><span className="shimmer">{t.contact.titleAccent}</span>
-            </h2>
-            <p className="text-white/40 text-xl mb-12 leading-relaxed">{t.contact.subtitle}</p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-14">
-              <a href={wa} target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-3 bg-white text-slate-900 font-black text-sm uppercase tracking-wide px-10 py-5 rounded-2xl hover:bg-amber-50 transition-colors btn-shine shadow-[0_0_40px_rgba(255,255,255,.06)]">
-                <MessageCircle className="w-5 h-5 text-emerald-500" />
-                {lang === "FR" ? "Parler à Paul" : "Talk to Paul"}
-              </a>
-              <a href={email}
-                className="inline-flex items-center justify-center gap-3 border border-white/10 text-white font-black text-sm uppercase tracking-wide px-10 py-5 rounded-2xl hover:bg-white/5 transition-colors">
-                <Mail className="w-5 h-5" />Email
-              </a>
-            </div>
-            <div className="flex flex-wrap justify-center gap-8 opacity-35">
-              {t.contact.features.map((f, i) => (
-                <div key={i} className="flex items-center gap-2 text-white text-xs font-bold uppercase tracking-widest">
-                  <span className="w-1 h-1 rounded-full bg-amber-500" />{f}
-                </div>
-              ))}
-            </div>
+            initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.1 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.1 }}
+            className="rounded-[18px] p-4"
+            style={{ background: "var(--color-bg)" }}>
+            <HoverEffectFAQ items={homeFaq} />
           </motion.div>
+
+          <div className="text-center mt-8">
+            <Link href="/faq" className="btn-ghost text-sm font-semibold">
+              {lang === "FR" ? "Voir toutes les questions" : "See all questions"}
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* ── Footer ── */}
-      <footer className="bg-[#060810] py-10 border-t border-white/5">
-        <div className="max-w-7xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
-              <Sun className="w-4 h-4 text-white" />
+      {/* ── 10. FINAL CTA + WORLD MAP ── */}
+      <section className="relative py-24 overflow-hidden" style={{ background: "var(--color-bg)" }}>
+        <div className="max-w-7xl mx-auto px-5">
+          <div className="grid lg:grid-cols-12 gap-10 items-center">
+            {/* Left: CTA text */}
+            <div className="lg:col-span-7">
+              <motion.h2
+                initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0 }}
+                className="font-display font-bold text-ocean-600 mb-4"
+                style={{ fontSize: "clamp(2rem, 3.8vw, 3rem)", letterSpacing: "-0.02em" }}>
+                {lang === "FR"
+                  ? "Prêt à démarrer ton aventure australienne ?"
+                  : "Ready to start your Australian journey?"}
+              </motion.h2>
+              <motion.p
+                initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.05 }}
+                className="text-ocean-400/70 text-lg leading-relaxed mb-8 max-w-lg">
+                {lang === "FR"
+                  ? "Dis-nous quand tu arrives, où tu atterris et ce dont tu as besoin. On choisit le bon pack ensemble."
+                  : "Tell us when you land, where you're arriving and what you need. We'll pick the right pack together."}
+              </motion.p>
+              <motion.div
+                initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.1 }}
+                className="flex flex-wrap gap-4">
+                <a href={wa} target="_blank" rel="noopener noreferrer" className="btn-shimmer">
+                  <MessageCircle className="w-5 h-5" />
+                  {lang === "FR" ? "Commencer sur WhatsApp" : "Start on WhatsApp"}
+                </a>
+                <Link href="/packages" className="btn-secondary">
+                  {lang === "FR" ? "Voir les packs" : "View packs"}
+                </Link>
+              </motion.div>
             </div>
-            <span className="text-white font-black text-base" style={{ fontFamily: "Outfit, sans-serif" }}>
-              OZ <span className="text-amber-500">Connection</span>
-            </span>
-          </div>
-          <p className="text-white/25 text-xs uppercase tracking-widest">{t.footer.copyright} · Melbourne</p>
-          <div className="flex gap-5 flex-wrap justify-center">
-            {[["arrive", lang === "FR" ? "Arrivée" : "Arrival"], ["jobs", "Jobs"], ["install", lang === "FR" ? "Installer" : "Settle"], ["visa", "Visa"], ["about", lang === "FR" ? "À propos" : "About"], ["contact", "Contact"]].map(([id, label]) => (
-              <button key={id} onClick={() => scrollTo(id)}
-                className="text-white/25 hover:text-amber-400 text-xs uppercase tracking-wider font-bold transition-colors">
-                {label}
-              </button>
-            ))}
+
+            {/* Right: contact photo + WorldMap overlay */}
+            <motion.div
+              className="lg:col-span-5"
+              initial={{ opacity: 0, x: 24 }} whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.15 }}
+              style={{ aspectRatio: "5/4" }}>
+              <div className="relative w-full h-full rounded-[22px] overflow-hidden shadow-[0_32px_64px_-12px_rgba(30,58,74,0.2)]">
+                <img
+                  src="/contact-bg.png"
+                  alt="Paul avec un backpacker à Melbourne"
+                  className="w-full h-full object-cover"
+                  style={{ filter: "contrast(1.05) saturate(1.1)" }}
+                  loading="lazy"
+                />
+                {/* Gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-ocean-900/65 via-ocean-900/15 to-transparent" />
+                {/* WorldMap décoratif en bas */}
+                <div className="absolute bottom-0 left-0 right-0 h-28 opacity-20 mix-blend-screen">
+                  <WorldMap />
+                </div>
+                {/* Caption */}
+                <div className="absolute bottom-5 left-5 right-5">
+                  <p className="text-sand-100 font-display font-semibold text-sm">
+                    {lang === "FR" ? "Ton contact local à Melbourne" : "Your local contact in Melbourne"}
+                  </p>
+                  <p className="text-sand-100/50 text-xs mt-0.5">Melbourne · Naarm · Australia</p>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
-      </footer>
-
+      </section>
     </div>
   );
 }
