@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useSpring, useTransform } from "framer-motion";
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { translations } from "@/lib/translations";
@@ -84,6 +84,140 @@ function CustomCursor() {
       <div id="oz-cursor-ring" ref={ringRef} aria-hidden="true" />
       <div id="oz-cursor-dot"  ref={dotRef}  aria-hidden="true" />
     </>
+  );
+}
+
+// ── Sparkles ──
+function Sparkles({ children, count = 8, color = "#F29700", className = "" }: {
+  children: React.ReactNode; count?: number; color?: string; className?: string;
+}) {
+  const [sparkles, setSparkles] = useState<{ id: number; x: number; y: number; size: number; delay: number; duration: number; gap: number; }[]>([]);
+  useEffect(() => {
+    setSparkles(Array.from({ length: count }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 4 + 2,
+      delay: Math.random() * 2,
+      duration: Math.random() * 1.4 + 1.2,
+      gap: Math.random() * 2 + 1.5,
+    })));
+  }, [count]);
+  return (
+    <span className={`relative inline-block ${className}`}>
+      <span className="pointer-events-none absolute inset-0 -m-2 overflow-visible" aria-hidden>
+        {sparkles.map(s => (
+          <motion.svg key={s.id} viewBox="0 0 24 24" width={s.size} height={s.size}
+            style={{ position: "absolute", left: `${s.x}%`, top: `${s.y}%`, color }}
+            initial={{ scale: 0, opacity: 0, rotate: 0 }}
+            animate={{ scale: [0, 1, 0], opacity: [0, 0.85, 0], rotate: [0, 90, 180] }}
+            transition={{ duration: s.duration, delay: s.delay, repeat: Infinity, repeatDelay: s.gap, ease: "easeInOut" }}>
+            <path d="M12 2 L13.5 9.5 L21 11 L13.5 12.5 L12 22 L10.5 12.5 L3 11 L10.5 9.5 Z" fill="currentColor" />
+          </motion.svg>
+        ))}
+      </span>
+      <span className="relative">{children}</span>
+    </span>
+  );
+}
+
+// ── ShimmerButton wrapper ──
+function ShimmerFrame() {
+  return (
+    <>
+      <span className="shimmer-frame" aria-hidden />
+      <style jsx>{`
+        .shimmer-frame {
+          position: absolute;
+          inset: -1px;
+          border-radius: inherit;
+          padding: 1px;
+          background: conic-gradient(from var(--shimmer-angle, 0deg), transparent 0%, rgba(255,255,255,0.85) 8%, transparent 22%, transparent 100%);
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          animation: shimmer-spin 3.6s linear infinite;
+          opacity: 0.85;
+          pointer-events: none;
+        }
+        @property --shimmer-angle { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+        @keyframes shimmer-spin {
+          0% { --shimmer-angle: 0deg; transform: rotate(0deg); }
+          100% { --shimmer-angle: 360deg; transform: rotate(360deg); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .shimmer-frame { animation: none; opacity: 0.4; }
+        }
+      `}</style>
+    </>
+  );
+}
+
+// ── TracingBeam ──
+function TracingBeam({ children, accentColor = "#F29700" }: {
+  children: React.ReactNode; accentColor?: string;
+}) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start 80%", "end 60%"] });
+  const [svgHeight, setSvgHeight] = useState(0);
+  useEffect(() => {
+    if (!ref.current) return;
+    const update = () => setSvgHeight(ref.current?.offsetHeight ?? 0);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(ref.current);
+    return () => ro.disconnect();
+  }, []);
+  const y1 = useSpring(useTransform(scrollYProgress, [0, 0.85], [50, svgHeight]), { stiffness: 500, damping: 90 });
+  const y2 = useSpring(useTransform(scrollYProgress, [0, 1], [50, svgHeight - 200]), { stiffness: 500, damping: 90 });
+  return (
+    <div ref={ref} className="relative">
+      <div className="absolute -left-4 md:-left-12 top-3 hidden md:block">
+        <div className="ml-[27px] flex h-4 w-4 items-center justify-center rounded-full border bg-white shadow-sm"
+          style={{ borderColor: "var(--color-line)" }}>
+          <div className="h-2 w-2 rounded-full border" style={{ borderColor: accentColor, background: accentColor }} />
+        </div>
+        <svg viewBox={`0 0 20 ${svgHeight}`} width="20" height={svgHeight} className="ml-4 block" aria-hidden>
+          <path d={`M 1 0 V ${svgHeight}`} fill="none" stroke={accentColor} strokeOpacity="0.16" strokeWidth="1.25" />
+          <path d={`M 1 0 V ${svgHeight}`} fill="none" stroke="url(#tb-grad)" strokeWidth="1.6" />
+          <defs>
+            <motion.linearGradient id="tb-grad" gradientUnits="userSpaceOnUse" x1="0" x2="0" y1={y1} y2={y2}>
+              <stop stopColor={accentColor} stopOpacity="0" />
+              <stop stopColor={accentColor} />
+              <stop offset="0.325" stopColor={accentColor} />
+              <stop offset="1" stopColor="#1E3A4A" stopOpacity="0" />
+            </motion.linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div>{children}</div>
+    </div>
+  );
+}
+
+// ── AuroraBackground ──
+function AuroraBackground({ children, className = "" }: {
+  children?: React.ReactNode; className?: string;
+}) {
+  return (
+    <div className={`relative overflow-hidden ${className}`}>
+      <div aria-hidden className="pointer-events-none absolute inset-0 opacity-70 mix-blend-multiply">
+        <div className="aurora aurora-1" />
+        <div className="aurora aurora-2" />
+        <div className="aurora aurora-3" />
+      </div>
+      <div className="relative">{children}</div>
+      <style jsx>{`
+        .aurora { position: absolute; inset: -20%; filter: blur(80px); opacity: 0.5; will-change: transform; }
+        .aurora-1 { background: radial-gradient(ellipse 60% 50% at 30% 30%, rgba(242,151,0,0.45), transparent 70%); animation: drift1 22s ease-in-out infinite alternate; }
+        .aurora-2 { background: radial-gradient(ellipse 50% 40% at 70% 60%, rgba(30,58,74,0.35), transparent 70%); animation: drift2 28s ease-in-out infinite alternate; }
+        .aurora-3 { background: radial-gradient(ellipse 45% 35% at 50% 80%, rgba(245,193,88,0.3), transparent 70%); animation: drift3 34s ease-in-out infinite alternate; }
+        @keyframes drift1 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(-6%,4%) scale(1.1); } }
+        @keyframes drift2 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(8%,-3%) scale(1.05); } }
+        @keyframes drift3 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(-4%,-6%) scale(1.08); } }
+        @media (prefers-reduced-motion: reduce) { .aurora { animation: none; } }
+      `}</style>
+    </div>
   );
 }
 
@@ -364,14 +498,17 @@ export default function HomePage() {
             transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
           >
             {/* Pill kicker */}
-            <span className="inline-block mb-6 text-xs font-medium uppercase tracking-[0.06em] px-4 py-1.5 rounded-full backdrop-blur-sm"
-              style={{
-                background: "rgba(242,151,0,0.18)",
-                border: "1px solid rgba(242,151,0,0.35)",
-                color: "#F5C158",
-              }}>
-              {lang === "FR" ? "Melbourne · Australie" : "Melbourne · Australia"}
-            </span>
+            <Sparkles count={10} color="#F5C158" className="mb-6">
+              <span className="inline-block text-xs font-medium uppercase tracking-[0.06em] px-4 py-1.5 rounded-full backdrop-blur-sm"
+                style={{
+                  background: "rgba(242,151,0,0.18)",
+                  border: "1px solid rgba(242,151,0,0.35)",
+                  color: "#F5C158",
+                }}>
+                {lang === "FR" ? "Melbourne · Australie" : "Melbourne · Australia"}
+              </span>
+            </Sparkles>
+            <div className="h-6" />
 
             {/* H1 */}
             <h1 className="font-display font-bold mb-4 leading-[1.05]"
@@ -395,14 +532,17 @@ export default function HomePage() {
             {/* CTAs */}
             <div className="flex flex-wrap items-center gap-4 mb-8">
               <a href={wa} target="_blank" rel="noopener noreferrer"
-                className="btn-shine inline-flex items-center gap-2.5 font-bold text-sm px-7 py-4 rounded-full transition-all"
+                className="btn-shine relative inline-flex items-center gap-2.5 font-bold text-sm px-7 py-4 rounded-full transition-all overflow-hidden"
                 style={{
                   background: "#F29700",
                   color: "#fff",
                   boxShadow: "0 4px 20px rgba(242,151,0,0.4)",
                 }}>
-                <MessageCircle className="w-5 h-5" />
-                {lang === "FR" ? "Commencer sur WhatsApp" : "Start on WhatsApp"}
+                <ShimmerFrame />
+                <MessageCircle className="w-5 h-5 relative z-10" />
+                <span className="relative z-10">
+                  {lang === "FR" ? "Commencer sur WhatsApp" : "Start on WhatsApp"}
+                </span>
               </a>
               <Link href="/packages"
                 className="inline-flex items-center gap-2 font-semibold text-sm px-6 py-3.5 rounded-full transition-colors backdrop-blur-sm"
@@ -595,6 +735,7 @@ export default function HomePage() {
           </div>
 
           {/* Items list — alternating layout */}
+          <TracingBeam>
           <div className="space-y-3">
             {t.pillars.items.map((item, i) => {
               const Icon = iconMap[item.icon] || ShieldCheck;
@@ -633,12 +774,16 @@ export default function HomePage() {
               );
             })}
           </div>
+          </TracingBeam>
         </div>
       </section>
 
       {/* ── 05b. FONDATEUR — Paul ── */}
       <section className="relative py-20 overflow-hidden" style={{ background: "var(--color-bg)" }}>
-        <div className="max-w-7xl mx-auto px-5">
+        <AuroraBackground className="absolute inset-0">
+          <div />
+        </AuroraBackground>
+        <div className="relative max-w-7xl mx-auto px-5">
           <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-center">
             {/* Photo Paul */}
             <motion.div
