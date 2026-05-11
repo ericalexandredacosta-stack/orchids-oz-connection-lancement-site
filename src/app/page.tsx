@@ -3,8 +3,12 @@
 import { motion } from "framer-motion";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { translations, type Language } from "@/lib/translations";
+import { GridPattern } from "@/components/grid-pattern";
+import { MagicCard } from "@/components/magic-card";
+import { Spotlight } from "@/components/spotlight";
+import { TextGenerateEffect } from "@/components/text-generate-effect";
 import {
-  MessageCircle, Mail, Globe, Sun, ChevronLeft, ChevronRight,
+  MessageCircle, Mail, Globe, Sun,
   MapPin, Star, Quote, CheckCircle2, ShieldCheck,
   Briefcase, Home, Car, GraduationCap, FileCheck, Compass,
   Check, X, ArrowDown, Users, Clock, Zap,
@@ -264,7 +268,9 @@ export default function OZConnectionPage() {
                 {S.ch1.h}
               </h2>
               <p className="reveal reveal-delay-2 text-lg text-amber-600 font-semibold mb-5 chapter-accent-left" style={{ borderColor: "#f59e0b" }}>{S.ch1.sub}</p>
-              <p className="reveal reveal-delay-2 text-slate-500 text-lg leading-relaxed mb-10">{S.ch1.body}</p>
+              <p className="reveal reveal-delay-2 text-slate-500 text-lg leading-relaxed mb-10">
+                <TextGenerateEffect text={S.ch1.body} />
+              </p>
               <a href={wa} target="_blank" rel="noopener noreferrer"
                 className="reveal reveal-delay-3 inline-flex items-center gap-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 font-black text-sm uppercase tracking-wide px-8 py-4 rounded-2xl transition-all shadow-lg shadow-amber-500/20 btn-shine">
                 <MessageCircle className="w-5 h-5" />
@@ -298,6 +304,7 @@ export default function OZConnectionPage() {
           CHAPTER 2 — JOBS
       ══════════════════════════════════════════ */}
       <section id="jobs" className="relative py-28 overflow-hidden section-alt">
+        <GridPattern className="text-emerald-600" opacity={0.06} width={56} height={56} />
         <span className="watermark text-emerald-500">02</span>
         <div className="max-w-7xl mx-auto px-5 relative z-10" ref={r2}>
           <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -318,7 +325,9 @@ export default function OZConnectionPage() {
                 {S.ch2.h}
               </h2>
               <p className="reveal reveal-delay-2 text-lg text-emerald-600 font-semibold mb-5 chapter-accent-left" style={{ borderColor: "#10b981" }}>{S.ch2.sub}</p>
-              <p className="reveal reveal-delay-2 text-slate-500 text-lg leading-relaxed mb-8">{S.ch2.body}</p>
+              <p className="reveal reveal-delay-2 text-slate-500 text-lg leading-relaxed mb-8">
+                <TextGenerateEffect text={S.ch2.body} />
+              </p>
               <div className="reveal reveal-delay-3 space-y-3 mb-10">
                 {(lang === "FR"
                   ? ["Conseils personnalisés pour ta recherche d'emploi", "Mise en relation avec notre réseau local à Melbourne", "Infos sur les secteurs qui recrutent en ce moment"]
@@ -353,19 +362,28 @@ export default function OZConnectionPage() {
               {S.ch3.h}
             </h2>
             <p className="reveal reveal-delay-2 text-lg text-orange-600 font-semibold mb-5">{S.ch3.sub}</p>
-            <p className="reveal reveal-delay-2 text-slate-500 text-lg leading-relaxed">{S.ch3.body}</p>
+            <p className="reveal reveal-delay-2 text-slate-500 text-lg leading-relaxed">
+              <TextGenerateEffect text={S.ch3.body} />
+            </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {t.services.items.map((item, i) => {
               const Icon = serviceIcons[i];
               return (
-                <div key={i} className={`reveal card-lift bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm reveal-delay-${Math.min(i + 1, 4)}`}>
-                  <div className="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center text-orange-500 mb-6">
-                    <Icon className="w-6 h-6" />
+                <MagicCard
+                  key={i}
+                  spotlightColor="rgba(249, 115, 22, 0.18)"
+                  borderGradient="rgba(249, 115, 22, 0.55)"
+                  className={`reveal card-lift bg-white rounded-[2rem] border border-slate-100 shadow-sm reveal-delay-${Math.min(i + 1, 4)}`}
+                >
+                  <div className="p-8">
+                    <div className="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center text-orange-500 mb-6">
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <h3 className="font-black text-slate-900 text-xl mb-3" style={{ fontFamily: "Outfit, sans-serif" }}>{item.title}</h3>
+                    <p className="text-slate-500 text-sm leading-relaxed">{item.desc}</p>
                   </div>
-                  <h3 className="font-black text-slate-900 text-xl mb-3" style={{ fontFamily: "Outfit, sans-serif" }}>{item.title}</h3>
-                  <p className="text-slate-500 text-sm leading-relaxed">{item.desc}</p>
-                </div>
+                </MagicCard>
               );
             })}
           </div>
@@ -389,6 +407,7 @@ export default function OZConnectionPage() {
           CHAPTER 4 — VISA
       ══════════════════════════════════════════ */}
       <section id="visa" className="relative py-28 overflow-hidden section-alt">
+        <GridPattern className="text-indigo-500" opacity={0.05} width={48} height={48} />
         <span className="watermark text-indigo-400">04</span>
         <div className="max-w-7xl mx-auto px-5 relative z-10" ref={r4}>
           <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -398,7 +417,9 @@ export default function OZConnectionPage() {
                 {S.ch4.h}
               </h2>
               <p className="reveal reveal-delay-2 text-lg text-indigo-600 font-semibold mb-5 chapter-accent-left" style={{ borderColor: "#6366f1" }}>{S.ch4.sub}</p>
-              <p className="reveal reveal-delay-2 text-slate-500 text-lg leading-relaxed mb-8">{S.ch4.body}</p>
+              <p className="reveal reveal-delay-2 text-slate-500 text-lg leading-relaxed mb-8">
+                <TextGenerateEffect text={S.ch4.body} />
+              </p>
               <div className="reveal reveal-delay-3 flex flex-wrap gap-2.5 mb-10">
                 {(lang === "FR"
                   ? ["Visa étudiant", "Travailleur qualifié", "Visa partenaire", "Working Holiday", "Visa tourisme"]
@@ -501,24 +522,31 @@ export default function OZConnectionPage() {
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             {t.testimonials.items.map((item, i) => (
-              <div key={i} className={`reveal card-lift bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm flex flex-col reveal-delay-${i + 1}`}>
-                <div className="flex gap-1 mb-5">
-                  {[...Array(5)].map((_, si) => <Star key={si} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
-                </div>
-                <Quote className="w-8 h-8 text-amber-100 mb-3" />
-                <p className="text-slate-500 italic text-base leading-relaxed flex-grow mb-6">"{item.text}"</p>
-                <div className="flex items-center gap-3 pt-5 border-t border-slate-50">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-black text-sm">
-                    {item.name.charAt(0)}
+              <MagicCard
+                key={i}
+                spotlightColor="rgba(245, 158, 11, 0.16)"
+                borderGradient="rgba(245, 158, 11, 0.55)"
+                className={`reveal card-lift bg-white rounded-[2rem] border border-slate-100 shadow-sm reveal-delay-${i + 1}`}
+              >
+                <div className="p-8 flex flex-col h-full">
+                  <div className="flex gap-1 mb-5">
+                    {[...Array(5)].map((_, si) => <Star key={si} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
                   </div>
-                  <div>
-                    <p className="font-black text-slate-900 text-sm">{item.name}</p>
-                    <p className="text-slate-400 text-xs flex items-center gap-1 mt-0.5">
-                      <MapPin className="w-3 h-3 text-amber-400" />{(item as any).origin ?? "Australia"}
-                    </p>
+                  <Quote className="w-8 h-8 text-amber-100 mb-3" />
+                  <p className="text-slate-500 italic text-base leading-relaxed flex-grow mb-6">&ldquo;{item.text}&rdquo;</p>
+                  <div className="flex items-center gap-3 pt-5 border-t border-slate-50">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-black text-sm">
+                      {item.name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-black text-slate-900 text-sm">{item.name}</p>
+                      <p className="text-slate-400 text-xs flex items-center gap-1 mt-0.5">
+                        <MapPin className="w-3 h-3 text-amber-400" />{item.origin ?? "Australia"}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </MagicCard>
             ))}
           </div>
         </div>
@@ -558,6 +586,8 @@ export default function OZConnectionPage() {
           CONTACT
       ══════════════════════════════════════════ */}
       <section id="contact" className="relative bg-slate-950 py-36 overflow-hidden text-center">
+        <Spotlight className="-top-40 left-0 md:-left-32 md:-top-20 h-[140%] w-[140%]" fill="#f59e0b" />
+        <Spotlight className="bottom-0 right-0 h-[80%] w-[80%]" fill="#f97316" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(245,158,11,0.1)_0%,transparent_65%)]" />
         <div className="max-w-3xl mx-auto px-5 relative z-10">
           <motion.div

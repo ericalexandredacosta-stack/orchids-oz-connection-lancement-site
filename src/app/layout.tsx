@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "OZ Connection | Backpackers français en Australie",
@@ -20,15 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
-      <body className="antialiased">
-        <Script
-          id="orchids-browser-logs"
-          src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/scripts/orchids-browser-logs.js"
-          strategy="afterInteractive"
-          data-orchids-project-id="9103cc46-a4b9-4bf4-81cd-069d8baeb25f"
-        />
-        {children}
-      </body>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }
