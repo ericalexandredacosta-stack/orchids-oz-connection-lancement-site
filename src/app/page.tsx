@@ -731,7 +731,8 @@ export default function HomePage() {
                 <img
                   src="/paul.jpg"
                   alt="Paul — fondateur d'OZ Connection, Melbourne"
-                  className="w-full h-full object-cover object-bottom"
+                  className="w-full h-full object-cover"
+                  style={{ objectPosition: "center 65%" }}
                   loading="lazy"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-ocean-900/70 via-transparent to-transparent" />
