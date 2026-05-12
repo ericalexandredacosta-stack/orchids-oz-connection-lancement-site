@@ -1100,8 +1100,8 @@ export default function HomePage() {
               transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}>
               <div className="relative rounded-[22px] overflow-hidden aspect-[4/3] shadow-[0_32px_64px_-12px_rgba(30,58,74,0.15)]">
                 <img
-                  src="https://images.unsplash.com/photo-1707288190500-bef63bc30356?q=80&w=1920&auto=format&fit=crop"
-                  alt="St Kilda Luna Park Melbourne"
+                  src="https://images.unsplash.com/photo-1735635477051-6507c13cd072?q=80&w=1920&auto=format&fit=crop"
+                  alt="Street art laneway in Fitzroy, Melbourne"
                   loading="lazy"
                   className="w-full h-full object-cover scale-105 hover:scale-100 transition-transform duration-700"
                   style={{ filter: "contrast(1.06) saturate(1.15) brightness(1.03)" }}
@@ -1115,7 +1115,7 @@ export default function HomePage() {
                   style={{ background: "rgba(244,237,224,0.92)", backdropFilter: "blur(12px)" }}>
                   <p className="text-ocean-600 font-display font-semibold text-sm flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    St Kilda · Melbourne
+                    Fitzroy · Melbourne
                   </p>
                   <p className="text-ocean-400/60 text-xs mt-0.5">
                     {lang === "FR" ? "Meilleure ville du monde — Time Out 2026" : "World's best city — Time Out 2026"}
