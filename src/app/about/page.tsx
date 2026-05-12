@@ -136,7 +136,7 @@ export default function AboutPage() {
 
             <motion.div initial={{ opacity:0,scale:0.96 }} whileInView={{ opacity:1,scale:1 }} viewport={{ once:true,amount:0.2 }} transition={{ duration:0.9,ease:[.22,1,.36,1] }}>
               <div className="relative rounded-[2.5rem] overflow-hidden aspect-[4/3] shadow-[0_40px_80px_-15px_rgba(0,0,0,0.15)]">
-                <img src="/st-kilda-luna-park.jpg" alt="St Kilda Luna Park Melbourne" loading="lazy"
+                <img src="https://images.unsplash.com/photo-1579962533163-1956f0cb28d9?q=80&w=1920&auto=format&fit=crop" alt="St Kilda Luna Park Melbourne" loading="lazy"
                   className="w-full h-full object-cover scale-105 hover:scale-100 transition-transform duration-700"
                   style={{ filter:"contrast(1.08) saturate(1.18) brightness(1.04)" }} />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-slate-900/10 to-transparent" />

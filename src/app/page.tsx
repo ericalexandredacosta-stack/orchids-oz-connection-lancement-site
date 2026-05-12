@@ -1100,7 +1100,7 @@ export default function HomePage() {
               transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}>
               <div className="relative rounded-[22px] overflow-hidden aspect-[4/3] shadow-[0_32px_64px_-12px_rgba(30,58,74,0.15)]">
                 <img
-                  src="/st-kilda-luna-park.jpg"
+                  src="https://images.unsplash.com/photo-1579962533163-1956f0cb28d9?q=80&w=1920&auto=format&fit=crop"
                   alt="St Kilda Luna Park Melbourne"
                   loading="lazy"
                   className="w-full h-full object-cover scale-105 hover:scale-100 transition-transform duration-700"
