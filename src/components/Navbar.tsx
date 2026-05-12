@@ -24,7 +24,7 @@ export default function Navbar() {
 
   const links: [string, string][] = [
     ["/packages", t.nav.packages],
-    ["/#how", t.nav.howItWorks],
+    ["/services", t.nav.services],
     ["/about", t.nav.about],
     ["/faq", t.nav.faq],
   ];

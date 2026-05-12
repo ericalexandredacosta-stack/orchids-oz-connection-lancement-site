@@ -8,7 +8,7 @@ import { useLang } from "@/lib/lang-context";
 import {
   MessageCircle, ArrowRight, CheckCircle2,
   FileText, Briefcase, Building2, Smartphone, Bike, Home,
-  MapPin, ShieldCheck, Languages, GraduationCap, AlertCircle,
+  MapPin, ShieldCheck, Languages, GraduationCap, AlertCircle, PiggyBank, FileSignature,
 } from "lucide-react";
 
 const heroImages = [
@@ -379,7 +379,7 @@ function WorldMap() {
 
 // ── Icon helper ──
 const iconMap: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
-  FileText, Briefcase, Building2, Smartphone, Bike, Home, MapPin, ShieldCheck, Languages,
+  FileText, Briefcase, Building2, Smartphone, Bike, Home, MapPin, ShieldCheck, Languages, PiggyBank, FileSignature,
 };
 
 export default function HomePage() {
@@ -942,7 +942,7 @@ export default function HomePage() {
               </motion.p>
               <motion.div
                 initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.12 }}>
-                <Link href="/packages"
+                <Link href="/services"
                   className="font-semibold text-sm underline decoration-dashed underline-offset-4 transition-colors" style={{ color: "#F29700" }}>
                   {t.servicesTeaser.cta}
                 </Link>
@@ -957,7 +957,7 @@ export default function HomePage() {
                   return (
                     <motion.div key={i}
                       initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.08 + i * 0.06 }}>
-                      <Link href={`/packages`}
+                      <Link href={`/services`}
                         className="flex flex-col gap-2 p-4 rounded-[18px] border group transition-colors"
                         style={{ borderColor: "rgba(30,58,74,0.1)", background: "var(--color-bg)" }}>
                         <div className="flex items-center justify-between">
@@ -968,7 +968,7 @@ export default function HomePage() {
                           <ArrowRight className="w-3.5 h-3.5 transition-colors" style={{ color: "rgba(52,82,102,0.4)" }} />
                         </div>
                         <p className="font-display font-medium text-ocean-600 text-sm leading-tight">{svc.name}</p>
-                        <p className="text-xs text-ocean-400/50">{svc.price}</p>
+                        <p className="text-xs text-ocean-400/50">{svc.priceAUD}</p>
                       </Link>
                     </motion.div>
                   );

@@ -12,6 +12,7 @@ export default function Footer() {
 
   const links: [string, string][] = [
     ["/packages", t.nav.packages],
+    ["/services", t.nav.services],
     ["/about", t.nav.about],
     ["/faq", t.nav.faq],
   ];
