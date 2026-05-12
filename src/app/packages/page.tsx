@@ -175,6 +175,51 @@ export default function PackagesPage() {
         </div>
       </section>
 
+      <div className="h-px bg-gradient-to-r from-transparent via-amber-100/50 to-transparent mx-5" />
+
+      {/* PARENTS PEACE OF MIND (add-on, directly under 3 main packs) */}
+      <section className="relative py-20 overflow-hidden" style={{ background:"linear-gradient(135deg, #fffbf4 0%, #fff7ed 50%, #fef9f0 100%)" }}>
+        <div className="max-w-5xl mx-auto px-5 relative z-10">
+          <div className="bg-sand-100/70 backdrop-blur-sm rounded-[3rem] p-10 sm:p-14 border border-sand-200/80 shadow-[0_8px_40px_rgba(254,154,0,0.08)] relative overflow-hidden">
+            <div className="grid md:grid-cols-2 gap-10 items-start relative z-10">
+              <div>
+                <div className="flex items-center gap-3 mb-4 flex-wrap">
+                  <Badge text={t.parents.badge} />
+                  <span className="text-xs text-terra-500 font-bold bg-sand-50 border border-sand-200 px-3 py-1 rounded-full">{t.parents.addLabel}</span>
+                </div>
+                <div className="flex items-baseline gap-2 mb-1">
+                  <span className="text-2xl font-bold text-ocean-600">{t.parents.priceAUD}</span>
+                </div>
+                <p className="text-ocean-400/50 text-sm mb-5">{t.parents.priceEUR}</p>
+                <h2 className="text-2xl sm:text-3xl font-bold text-ocean-600 tracking-tight mb-4" style={{ fontFamily: "var(--font-display)" }}>
+                  {t.parents.title}
+                </h2>
+                <p className="text-ocean-400 text-base leading-relaxed mb-6">{t.parents.body}</p>
+                <p className="text-xs text-ocean-400/50 flex items-start gap-2 mb-6 leading-relaxed">
+                  <ShieldCheck className="w-3.5 h-3.5 shrink-0 mt-0.5 text-slate-300" />{t.parents.note}
+                </p>
+                <a href={wa} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2.5 bg-ocean-600 hover:bg-terra-500 text-white font-bold text-sm uppercase tracking-wide px-7 py-4 rounded-2xl transition-all shadow-lg btn-shine">
+                  <MessageCircle className="w-5 h-5" />{t.parents.cta}
+                </a>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-ocean-400/50 mb-4">
+                  {lang==="FR"?"Inclus :":"Included:"}
+                </p>
+                <ul className="space-y-3">
+                  {t.parents.includes.map((item,i) => (
+                    <li key={i} className="flex items-start gap-3 text-ocean-400 text-sm leading-relaxed">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />{item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <div className="h-px bg-gradient-to-r from-transparent via-slate-100 to-transparent mx-5" />
 
       {/* COMPARISON TABLE */}
@@ -293,51 +338,6 @@ export default function PackagesPage() {
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />Melbourne Arrival
                 </p>
                 <p className="text-ocean-400/70 text-xs">{lang==="FR"?"7 nuits hostel incluses · Transfert aéroport · Carte SIM":"7 nights hostel included · Airport transfer · SIM card"}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div className="h-px bg-gradient-to-r from-transparent via-amber-100/50 to-transparent mx-5" />
-
-      {/* PARENTS PEACE OF MIND */}
-      <section className="relative py-20 overflow-hidden" style={{ background:"linear-gradient(135deg, #fffbf4 0%, #fff7ed 50%, #fef9f0 100%)" }}>
-        <div className="max-w-5xl mx-auto px-5 relative z-10">
-          <div className="bg-sand-100/70 backdrop-blur-sm rounded-[3rem] p-10 sm:p-14 border border-sand-200/80 shadow-[0_8px_40px_rgba(254,154,0,0.08)] relative overflow-hidden">
-            <div className="grid md:grid-cols-2 gap-10 items-start relative z-10">
-              <div>
-                <div className="flex items-center gap-3 mb-4 flex-wrap">
-                  <Badge text={t.parents.badge} />
-                  <span className="text-xs text-terra-500 font-bold bg-sand-50 border border-sand-200 px-3 py-1 rounded-full">{t.parents.addLabel}</span>
-                </div>
-                <div className="flex items-baseline gap-2 mb-1">
-                  <span className="text-2xl font-bold text-ocean-600">{t.parents.priceAUD}</span>
-                </div>
-                <p className="text-ocean-400/50 text-sm mb-5">{t.parents.priceEUR}</p>
-                <h2 className="text-2xl sm:text-3xl font-bold text-ocean-600 tracking-tight mb-4" style={{ fontFamily: "var(--font-display)" }}>
-                  {t.parents.title}
-                </h2>
-                <p className="text-ocean-400 text-base leading-relaxed mb-6">{t.parents.body}</p>
-                <p className="text-xs text-ocean-400/50 flex items-start gap-2 mb-6 leading-relaxed">
-                  <ShieldCheck className="w-3.5 h-3.5 shrink-0 mt-0.5 text-slate-300" />{t.parents.note}
-                </p>
-                <a href={wa} target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2.5 bg-ocean-600 hover:bg-terra-500 text-white font-bold text-sm uppercase tracking-wide px-7 py-4 rounded-2xl transition-all shadow-lg btn-shine">
-                  <MessageCircle className="w-5 h-5" />{t.parents.cta}
-                </a>
-              </div>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-ocean-400/50 mb-4">
-                  {lang==="FR"?"Inclus :":"Included:"}
-                </p>
-                <ul className="space-y-3">
-                  {t.parents.includes.map((item,i) => (
-                    <li key={i} className="flex items-start gap-3 text-ocean-400 text-sm leading-relaxed">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />{item}
-                    </li>
-                  ))}
-                </ul>
               </div>
             </div>
           </div>

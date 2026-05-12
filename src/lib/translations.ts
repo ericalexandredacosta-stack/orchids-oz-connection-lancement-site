@@ -278,7 +278,7 @@ export const translations = {
       points: [
         { title: "Comprendre les options de visa", desc: "Visa étudiant (subclass 500), conditions, droits au travail associés — on t'aide à poser les bonnes questions." },
         { title: "Trouver le bon établissement", desc: "TAFE, université, cours d'anglais — on t'oriente selon ton profil et tes objectifs." },
-        { title: "Mise en relation avec un agent OMARA", desc: "Pour les démarches officielles de visa, on te redirige vers des agents de migration enregistrés." },
+        { title: "Mise en relation avec notre agent partenaire", desc: "Pour les démarches officielles de visa, on te redirige vers notre agent d'immigration partenaire enregistré OMARA." },
         { title: "Démarches pratiques à l'arrivée", desc: "Une fois en Australie, les démarches administratives (TFN, compte bancaire, logement) s'appliquent aussi aux étudiants." },
       ],
       disclaimer: "OZ Connection n'est PAS un agent de migration enregistré (OMARA). Pour toute démarche officielle de visa, contactez un agent OMARA enregistré.",
@@ -583,7 +583,7 @@ export const translations = {
       points: [
         { title: "Understand your visa options", desc: "Student visa (subclass 500), conditions, associated work rights — we help you ask the right questions." },
         { title: "Find the right institution", desc: "TAFE, university, English courses — we guide you based on your profile and goals." },
-        { title: "Connect with a registered OMARA agent", desc: "For official visa applications, we refer you to registered migration agents." },
+        { title: "Connect with our partner agent", desc: "For official visa applications, we refer you to our OMARA-registered partner migration agent." },
         { title: "Practical setup on arrival", desc: "Once in Australia, admin steps (TFN, bank account, housing) apply to students too — we handle those." },
       ],
       disclaimer: "OZ Connection is NOT a registered migration agent (OMARA). For official visa applications, please contact a registered OMARA agent.",

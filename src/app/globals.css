@@ -315,56 +315,6 @@ h1, h2, h3 { font-family: var(--font-display); }
   border: 1px solid rgba(255,255,255,0.08);
 }
 
-/* ── Custom cursor — desktop only ── */
-@media (pointer: fine) and (hover: hover) {
-  html, html * { cursor: none !important; }
-  html input,
-  html textarea,
-  html [contenteditable],
-  html select { cursor: text !important; }
-}
-
-#oz-cursor-dot,
-#oz-cursor-ring {
-  position: fixed;
-  top: 0; left: 0;
-  pointer-events: none;
-  z-index: 99999;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  will-change: transform;
-  display: none;
-}
-@media (pointer: fine) and (hover: hover) {
-  #oz-cursor-dot  { display: block; }
-  #oz-cursor-ring { display: block; }
-}
-#oz-cursor-dot {
-  width: 6px;
-  height: 6px;
-  background: #F29700;
-  transition: width .15s ease, height .15s ease, opacity .2s ease;
-}
-#oz-cursor-ring {
-  width: 28px;
-  height: 28px;
-  border: 1.5px solid rgba(242,151,0,0.45);
-  background: transparent;
-  transition: width .2s ease, height .2s ease, border-color .2s ease, opacity .2s ease;
-}
-.oz-cursor-hover #oz-cursor-dot {
-  width: 8px;
-  height: 8px;
-  background: #F29700;
-}
-.oz-cursor-hover #oz-cursor-ring {
-  width: 42px;
-  height: 42px;
-  border-color: rgba(242,151,0,0.3);
-}
-.oz-cursor-hidden #oz-cursor-dot,
-.oz-cursor-hidden #oz-cursor-ring { opacity: 0; }
-
 /* ── Bento grid ── */
 .bento-grid {
   display: grid;

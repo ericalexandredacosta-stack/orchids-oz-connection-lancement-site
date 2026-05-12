@@ -44,12 +44,12 @@ export default function ProPage() {
     { num: "01", title: "Tu contactes OZ Connection", desc: "Via WhatsApp ou email. Tu décris ton projet, les dates et le type de travail." },
     { num: "02", title: "On te présente un backpacker", desc: "On sélectionne un profil disponible, motivé et vérifié parmi notre réseau Melbourne." },
     { num: "03", title: "La mission démarre", desc: "Tu travailles directement avec le backpacker. On reste disponibles si besoin." },
-    { num: "04", title: "Une seule facturation", desc: "250 AUD au journalier + 80 AUD frais de mise en relation. Pas de surprise." },
+    { num: "04", title: "Tarif simple", desc: "330 AUD au total. Tu sais exactement ce que tu paies." },
   ] : [
     { num: "01", title: "You contact OZ Connection", desc: "Via WhatsApp or email. Tell us about your project, dates and type of work." },
     { num: "02", title: "We introduce a backpacker", desc: "We match an available, motivated and verified profile from our Melbourne network." },
     { num: "03", title: "The job starts", desc: "You work directly with the backpacker. We remain available if needed." },
-    { num: "04", title: "One simple invoice", desc: "$250 AUD to the worker + $80 AUD placement fee. No surprises." },
+    { num: "04", title: "Simple pricing", desc: "$330 AUD total. You know exactly what you're paying." },
   ];
 
   const benefits = isFR ? [
@@ -136,8 +136,8 @@ export default function ProPage() {
           <Reveal delay={0.1}>
             <p className="text-ocean-400/65 text-base mb-12 max-w-lg mx-auto leading-relaxed">
               {isFR
-                ? "Pas de tarif caché, pas de marge récurrente sur le journalier. Tu paies la mise en relation une fois."
-                : "No hidden fees, no ongoing margin on the worker. You pay for the placement once."}
+                ? "Un tarif clair pour la mission, sans frais cachés ni marge récurrente."
+                : "A clear all-in rate for the placement, no hidden fees or ongoing margin."}
             </p>
           </Reveal>
 
@@ -147,16 +147,13 @@ export default function ProPage() {
               <div className="rounded-[22px] p-8 border text-left"
                 style={{ background: "var(--color-bg)", borderColor: "rgba(30,58,74,0.1)" }}>
                 <p className="text-xs font-bold uppercase tracking-[0.12em] mb-3" style={{ color: "var(--color-ink-soft)" }}>
-                  {isFR ? "Taux journalier backpacker" : "Backpacker day rate"}
+                  {isFR ? "Tarif journalier backpacker" : "Backpacker day rate"}
                 </p>
                 <p className="font-display font-bold leading-none mb-1"
                   style={{ fontSize: "clamp(3rem, 6vw, 4.5rem)", color: "#1E3A4A" }}>
                   $250
                 </p>
                 <p className="text-ocean-400/50 text-sm font-medium">AUD</p>
-                <p className="text-ocean-400/60 text-xs mt-3 leading-relaxed">
-                  {isFR ? "Payé directement au backpacker" : "Paid directly to the worker"}
-                </p>
               </div>
             </Reveal>
 
@@ -172,9 +169,6 @@ export default function ProPage() {
                   $80
                 </p>
                 <p className="text-white/60 text-sm font-medium">AUD</p>
-                <p className="text-white/70 text-xs mt-3 leading-relaxed">
-                  {isFR ? "Payé à OZ Connection · une seule fois par mission" : "Paid to OZ Connection · once per placement"}
-                </p>
               </div>
             </Reveal>
           </div>
@@ -182,8 +176,8 @@ export default function ProPage() {
           <Reveal delay={0.22}>
             <p className="text-ocean-400/40 text-xs mt-8 max-w-md mx-auto leading-relaxed">
               {isFR
-                ? "Les frais de mise en relation sont dus à la confirmation de la mission. Le taux journalier est convenu directement entre le tradie et le backpacker."
-                : "Placement fee is due on job confirmation. The day rate is agreed directly between the tradie and the backpacker."}
+                ? "330 AUD au total pour la mission. Tu sais exactement ce que tu paies, à la confirmation."
+                : "$330 AUD total for the placement. You know exactly what you're paying, on confirmation."}
             </p>
           </Reveal>
         </div>

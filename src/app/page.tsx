@@ -6,7 +6,7 @@ import Link from "next/link";
 import { translations } from "@/lib/translations";
 import { useLang } from "@/lib/lang-context";
 import {
-  MessageCircle, ArrowRight, CheckCircle2, XCircle,
+  MessageCircle, ArrowRight, CheckCircle2,
   FileText, Briefcase, Building2, Smartphone, Bike, Home,
   MapPin, ShieldCheck, Languages, GraduationCap, AlertCircle,
 } from "lucide-react";
@@ -33,57 +33,6 @@ function Reveal({ children, delay = 0, className = "" }: {
     >
       {children}
     </motion.div>
-  );
-}
-
-// ── Custom Cursor ──
-function CustomCursor() {
-  const dotRef  = useRef<HTMLDivElement>(null);
-  const ringRef = useRef<HTMLDivElement>(null);
-  const pos     = useRef({ x: 0, y: 0 });
-  const raf     = useRef<number>(0);
-
-  useEffect(() => {
-    const dot  = dotRef.current;
-    const ring = ringRef.current;
-    if (!dot || !ring) return;
-    let lx = 0, ly = 0;
-    const onMove = (e: MouseEvent) => {
-      pos.current = { x: e.clientX, y: e.clientY };
-      dot.style.transform = `translate(calc(-50% + ${e.clientX}px), calc(-50% + ${e.clientY}px))`;
-      document.documentElement.classList.remove("oz-cursor-hidden");
-    };
-    const onLeave = () => document.documentElement.classList.add("oz-cursor-hidden");
-    const onEnter = () => document.documentElement.classList.remove("oz-cursor-hidden");
-    const onOver = (e: MouseEvent) => {
-      const el = e.target as HTMLElement;
-      document.documentElement.classList.toggle("oz-cursor-hover", !!el.closest("a, button, [role='button']"));
-    };
-    const animate = () => {
-      lx += (pos.current.x - lx) * 0.12;
-      ly += (pos.current.y - ly) * 0.12;
-      ring.style.transform = `translate(calc(-50% + ${lx}px), calc(-50% + ${ly}px))`;
-      raf.current = requestAnimationFrame(animate);
-    };
-    raf.current = requestAnimationFrame(animate);
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseover", onOver);
-    document.documentElement.addEventListener("mouseleave", onLeave);
-    document.documentElement.addEventListener("mouseenter", onEnter);
-    return () => {
-      cancelAnimationFrame(raf.current);
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseover", onOver);
-      document.documentElement.removeEventListener("mouseleave", onLeave);
-      document.documentElement.removeEventListener("mouseenter", onEnter);
-    };
-  }, []);
-
-  return (
-    <>
-      <div id="oz-cursor-ring" ref={ringRef} aria-hidden="true" />
-      <div id="oz-cursor-dot"  ref={dotRef}  aria-hidden="true" />
-    </>
   );
 }
 
@@ -469,7 +418,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen" style={{ background: "var(--color-bg)" }}>
-      <CustomCursor />
       <div id="progress-bar" style={{ width: `${progress}%` }} />
 
       {/* ── 01. HERO ── */}
@@ -484,7 +432,7 @@ export default function HomePage() {
         {/* Multi-layer overlay per brief */}
         <div className="absolute inset-0 z-10"
           style={{
-            background: "linear-gradient(to bottom, rgba(10,24,32,0.85) 0%, rgba(10,24,32,0.55) 50%, rgba(10,24,32,0.80) 100%)",
+            background: "linear-gradient(to bottom, rgba(10,24,32,0.55) 0%, rgba(10,24,32,0.25) 50%, rgba(10,24,32,0.55) 100%)",
           }} />
         {/* Radial orange glow */}
         <div className="absolute inset-0 z-10 pointer-events-none"
@@ -589,26 +537,14 @@ export default function HomePage() {
         <div className="absolute right-0 top-0 bottom-0 w-20 z-10 pointer-events-none"
           style={{ background: "linear-gradient(to left, var(--color-bg-alt), transparent)" }} />
 
-        {/* Row 1 */}
-        <div className="mb-2">
+        {/* Row 1 — orange (only row) */}
+        <div>
           <div className="marquee-row" style={{ "--marquee-speed": "48s" } as React.CSSProperties}>
             {[...t.topics, ...t.topics].map((chip, i) => (
               <span key={i}
                 className="inline-flex items-center gap-1.5 mx-2 px-4 py-2 rounded-full border text-xs font-medium whitespace-nowrap"
                 style={{ background: "var(--color-bg)", borderColor: "var(--color-line)", color: "var(--color-ink-soft)" }}>
                 <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#F29700" }} />{chip}
-              </span>
-            ))}
-          </div>
-        </div>
-        {/* Row 2 — reverse */}
-        <div>
-          <div className="marquee-row reverse" style={{ "--marquee-speed": "56s" } as React.CSSProperties}>
-            {[...[...t.topics].reverse(), ...[...t.topics].reverse()].map((chip, i) => (
-              <span key={i}
-                className="inline-flex items-center gap-1.5 mx-2 px-4 py-2 rounded-full border text-xs font-medium whitespace-nowrap"
-                style={{ background: "var(--color-bg)", borderColor: "var(--color-line)", color: "var(--color-ink-soft)" }}>
-                <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#345266" }} />{chip}
               </span>
             ))}
           </div>
@@ -795,7 +731,7 @@ export default function HomePage() {
                 <img
                   src="/paul.jpg"
                   alt="Paul — fondateur d'OZ Connection, Melbourne"
-                  className="w-full h-full object-cover object-top"
+                  className="w-full h-full object-cover object-bottom"
                   loading="lazy"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-ocean-900/70 via-transparent to-transparent" />
@@ -839,6 +775,14 @@ export default function HomePage() {
                 <motion.p
                   initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.25 }}
+                  transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.13 }}>
+                  {lang === "FR"
+                    ? "Il est arrivé en Australie sans parler un mot d'anglais. Aujourd'hui, il est citoyen australien."
+                    : "He arrived in Australia without speaking a word of English. Today, he is an Australian citizen."}
+                </motion.p>
+                <motion.p
+                  initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.25 }}
                   transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.15 }}>
                   {lang === "FR"
                     ? "Après être lui-même passé par les galères de l'arrivée, Paul a créé OZ Connection pour aider les nouveaux arrivants à éviter les erreurs classiques, gagner du temps et commencer avec des étapes plus claires."
@@ -878,7 +822,7 @@ export default function HomePage() {
               className="pill-kicker">{t.forWhom.kicker}
             </motion.span>
           </div>
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="max-w-2xl mx-auto">
             {/* Pour toi */}
             <motion.div
               initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.05 }}
@@ -895,27 +839,6 @@ export default function HomePage() {
                 {t.forWhom.forItems.map((item, i) => (
                   <li key={i} className="flex items-start gap-2.5 text-ocean-600/80 text-sm">
                     <span className="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style={{ background: "#F29700" }} />{item}
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-
-            {/* Pas pour toi */}
-            <motion.div
-              initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.25 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number], delay: 0.1 }}
-              className="rounded-[18px] p-8 border border-ocean-400/10"
-              style={{ background: "rgba(30,58,74,0.04)" }}>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center"
-                  style={{ background: "rgba(52,82,102,0.12)" }}>
-                  <XCircle className="w-5 h-5 text-ocean-400" />
-                </div>
-                <h3 className="font-display font-semibold text-ocean-600 text-xl">{t.forWhom.notTitle}</h3>
-              </div>
-              <ul className="space-y-3">
-                {t.forWhom.notItems.map((item, i) => (
-                  <li key={i} className="flex items-start gap-2.5 text-ocean-600/70 text-sm">
-                    <span className="w-4 h-0.5 bg-ocean-400/40 shrink-0 mt-2" />{item}
                   </li>
                 ))}
               </ul>
