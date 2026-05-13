@@ -1,0 +1,32 @@
+# OZ Connection
+> Arrival support service for backpackers, Working Holiday Visa (WHV) holders and international students settling in Melbourne, Australia.
+
+OZ Connection is a Melbourne-based guidance service helping French and English-speaking backpackers and international students navigate their first weeks in Australia: TFN and ABN applications, bank account setup, SIM card, housing search, CV writing (Australian format), NAATI driving licence translation, and job search direction.
+
+OZ Connection is NOT a registered migration agent (OMARA), NOT a school, NOT a bank, NOT a tax agent. It provides practical orientation and personal guidance only — no immigration advice, no employment guarantee.
+
+## Key pages
+- /services — Six à la carte arrival services with prices
+- /packages — Three support tiers (Australia Starter $99 AUD, Melbourne Ready $299 AUD, Melbourne Arrival $899 AUD)
+- /faq — Answers to common arrival questions
+- /about — Founder background and service philosophy
+- /pro — Labour matching for Melbourne tradies and builders
+
+## Canonical facts
+- Service area: Greater Melbourne, Victoria, Australia (also Australia Starter for clients arriving anywhere in AU)
+- Languages: French and English
+- Official TFN application: free via the Australian Taxation Office (ato.gov.au)
+- Official ABN application: free via the Australian Business Register (abr.gov.au)
+- OZ Connection à la carte services (AUD):
+  - TFN guidance, ABN guidance, bank account setup, SIM card guidance: see /services for current pricing
+  - NAATI driving licence translation: 50 AUD, 24–48 h turnaround
+  - CV writing (Australian format): 55 / 85 AUD (standard / premium)
+  - Australian postal address: from 7 AUD / month
+- Contact: WhatsApp +61 494 652 991 · Email contact@oz-connection.com
+- Domain: https://www.oz-connection.com
+
+## What OZ Connection does NOT do
+- Visa or migration advice (no OMARA registration)
+- Guaranteed employment placement
+- Legal, tax or financial advice
+- Emergency services (Parents Peace of Mind is reassurance, not emergency response)
