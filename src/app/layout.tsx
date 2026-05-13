@@ -29,6 +29,16 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           strategy="afterInteractive"
           data-orchids-project-id="9103cc46-a4b9-4bf4-81cd-069d8baeb25f"
         />
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-DD2W0T31TL"
+          strategy="afterInteractive"
+        />
+        <Script id="ga-init" strategy="afterInteractive">
+          {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-DD2W0T31TL');`}
+        </Script>
         <LangProvider>
           <Navbar />
           {children}
