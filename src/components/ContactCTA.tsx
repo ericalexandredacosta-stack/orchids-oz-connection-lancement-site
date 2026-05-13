@@ -5,7 +5,7 @@ import { useLang } from "@/lib/lang-context";
 import { translations } from "@/lib/translations";
 
 const wa = "https://wa.me/+61494652991";
-const email = "mailto:contact@ozconnection.com.au";
+const email = "mailto:contact@oz-connection.com";
 
 export default function ContactCTA() {
   const { lang } = useLang();

@@ -35,8 +35,16 @@ export const metadata: Metadata = {
     title: "OZ Connection | Melbourne Arrival Support",
     description:
       "Arrival setup, local guidance and WhatsApp support for backpackers and students settling in Melbourne, in English and French.",
+    images: [
+      {
+        url: "/og-default.jpg",
+        width: 1200,
+        height: 630,
+        alt: "OZ Connection — Melbourne arrival support",
+      },
+    ],
   },
-  twitter: { card: "summary_large_image" },
+  twitter: { card: "summary_large_image", images: ["/og-default.jpg"] },
   icons: { icon: [{ url: "/icon.svg", type: "image/svg+xml" }] },
   robots: { index: true, follow: true },
 };
@@ -62,6 +70,7 @@ const localBusinessSchema = {
   name: "OZ Connection",
   url: "https://www.oz-connection.com",
   telephone: "+61494652991",
+  email: "contact@oz-connection.com",
   priceRange: "$$",
   areaServed: { "@type": "City", name: "Melbourne", addressCountry: "AU" },
   serviceArea: {

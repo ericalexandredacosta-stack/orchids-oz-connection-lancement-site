@@ -302,7 +302,7 @@ export const translations = {
         { icon: "PiggyBank", name: "Superannuation", slug: "super", desc: "Évaluation de tes besoins, comparaison des fonds, aide à l'adhésion et suivi personnalisé.", priceAUD: "30 AUD", priceEUR: "19 €" },
         { icon: "Languages", name: "Traduction permis (NAATI)", slug: "naati", desc: "Traduction officielle agréée NAATI de ton permis de conduire pour rouler ou louer un véhicule partout en Australie. Délai 24 à 48 h.", priceAUD: "50 AUD", priceEUR: "31 €" },
         { icon: "FileSignature", name: "Rédaction CV", slug: "cv", desc: "Traduction et adaptation de ton CV au marché australien, mise en forme Canva. Option premium : appel + création sur-mesure.", priceAUD: "55 / 85 AUD", priceEUR: "35 / 53 €" },
-        { icon: "MapPin", name: "Adresse postale AU", slug: "adresse", desc: "Une adresse australienne permanente pour tes documents officiels (TFN, banque, permis). Réception, scan, transfert.", priceAUD: "À partir de 4 AUD / mois", priceEUR: "À partir de 2,80 € / mois" },
+        { icon: "MapPin", name: "Adresse postale AU", slug: "adresse", desc: "Une adresse australienne permanente pour tes documents officiels (TFN, banque, permis). Réception, scan, transfert.", priceAUD: "À partir de 7 AUD / mois", priceEUR: "À partir de 4,80 € / mois" },
       ],
     },
     footer: {
@@ -613,7 +613,7 @@ export const translations = {
         { icon: "PiggyBank", name: "Superannuation", slug: "super", desc: "Needs assessment, fund comparison, joining assistance and personalized follow-up.", priceAUD: "30 AUD", priceEUR: "19 €" },
         { icon: "Languages", name: "Driving licence translation (NAATI)", slug: "naati", desc: "Official NAATI-certified translation of your driving licence to drive or rent vehicles anywhere in Australia. 24–48 h turnaround.", priceAUD: "50 AUD", priceEUR: "31 €" },
         { icon: "FileSignature", name: "CV writing", slug: "cv", desc: "Translation and adaptation of your CV to the Australian job market, Canva format. Premium tier: 1-on-1 call + custom build.", priceAUD: "55 / 85 AUD", priceEUR: "35 / 53 €" },
-        { icon: "MapPin", name: "Australian postal address", slug: "adresse", desc: "A permanent Australian address for your official documents (TFN, bank, licence). Receive, scan, forward.", priceAUD: "From 4 AUD / month", priceEUR: "From 2.80 € / month" },
+        { icon: "MapPin", name: "Australian postal address", slug: "adresse", desc: "A permanent Australian address for your official documents (TFN, bank, licence). Receive, scan, forward.", priceAUD: "From 7 AUD / month", priceEUR: "From 4.80 € / month" },
       ],
     },
     footer: {
