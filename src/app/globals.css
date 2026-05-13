@@ -1,6 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Manrope:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
-@import "tw-animate-css";
 
 @theme {
   --color-sand-50: #FBF7F0;
@@ -21,8 +19,8 @@
 
   --radius-card: 18px;
   --radius-pill: 999px;
-  --font-display: 'Fraunces', Georgia, serif;
-  --font-body: 'Manrope', system-ui, sans-serif;
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-body: var(--font-manrope), system-ui, sans-serif;
 }
 
 :root {
