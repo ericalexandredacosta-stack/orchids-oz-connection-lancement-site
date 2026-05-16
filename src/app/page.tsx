@@ -12,10 +12,10 @@ import {
 } from "lucide-react";
 
 const heroImages = [
-  { url: "https://images.unsplash.com/photo-1545044846-351ba102b6d5?q=80&w=1920&auto=format&fit=crop" },
-  { url: "https://images.unsplash.com/photo-1529108190281-9a4f620bc2d8?q=80&w=1920&auto=format&fit=crop" },
   { url: "https://images.unsplash.com/photo-1624138784614-87fd1b6528f8?q=80&w=1920&auto=format&fit=crop" },
+  { url: "https://images.unsplash.com/photo-1545044846-351ba102b6d5?q=80&w=1920&auto=format&fit=crop" },
   { url: "https://images.unsplash.com/photo-1514395462725-fb4566210144?q=80&w=1920&auto=format&fit=crop" },
+  { url: "https://images.unsplash.com/photo-1529108190281-9a4f620bc2d8?q=80&w=1920&auto=format&fit=crop" },
 ];
 
 const wa = "https://wa.me/+61494652991";
