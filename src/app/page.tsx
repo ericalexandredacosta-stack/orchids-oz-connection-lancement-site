@@ -432,7 +432,7 @@ export default function HomePage() {
         {/* Multi-layer overlay per brief */}
         <div className="absolute inset-0 z-10"
           style={{
-            background: "linear-gradient(to bottom, rgba(10,24,32,0.38) 0%, rgba(10,24,32,0.12) 45%, rgba(10,24,32,0.42) 100%)",
+            background: "linear-gradient(to bottom, rgba(10,24,32,0.55) 0%, rgba(10,24,32,0.25) 50%, rgba(10,24,32,0.55) 100%)",
           }} />
         {/* Radial orange glow */}
         <div className="absolute inset-0 z-10 pointer-events-none"
