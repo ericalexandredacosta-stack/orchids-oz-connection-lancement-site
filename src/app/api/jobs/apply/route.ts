@@ -51,9 +51,20 @@ function validate(body: Payload): string | null {
   return null;
 }
 
-function summariseForAttribute(body: Payload): Record<string, string | number | boolean> {
+function normaliseE164(input: string | undefined | null): string | undefined {
+  if (!input) return undefined;
+  const cleaned = input.trim().replace(/[^\d+]/g, "");
+  if (/^\+\d{8,15}$/.test(cleaned)) return cleaned;
+  if (/^0\d{9}$/.test(cleaned)) return "+61" + cleaned.slice(1);
+  if (/^61\d{9}$/.test(cleaned)) return "+" + cleaned;
+  return undefined;
+}
+
+function summariseForAttribute(body: Payload, rawPhone: string): Record<string, string | number | boolean> {
   const ppeJoined = (body.ppe || []).join(",");
   const daysJoined = (body.availableDays || []).join(",");
+  const baseNotes = (body.notes || "").trim();
+  const notes = [rawPhone ? `Phone: ${rawPhone}` : "", baseNotes].filter(Boolean).join("\n\n");
   return {
     JOB_LAST_APPLIED: body.jobTitleEN || body.jobSlug || "",
     JOB_LAST_SLUG: body.jobSlug || "",
@@ -68,7 +79,7 @@ function summariseForAttribute(body: Payload): Record<string, string | number | 
     AVAILABLE_FROM: body.availableFrom || "",
     AVAILABLE_DAYS: daysJoined,
     HOURS_PER_DAY: body.hoursPerDay || "",
-    APPLICANT_NOTES: body.notes || "",
+    APPLICANT_NOTES: notes,
     LANGUAGE: body.language || "",
   };
 }
@@ -80,12 +91,14 @@ async function brevoUpsertContact(body: Payload) {
     console.warn("[brevo] BREVO_API_KEY missing - skipping Brevo sync (mock mode).");
     return { mock: true };
   }
-  const attributes = {
-    FIRSTNAME: body.firstName,
-    LASTNAME: body.lastName,
-    SMS: body.phone,
-    ...summariseForAttribute(body),
+  const rawPhone = (body.phone || "").trim();
+  const smsE164 = normaliseE164(rawPhone);
+  const attributes: Record<string, string | number | boolean> = {
+    FIRSTNAME: body.firstName || "",
+    LASTNAME: body.lastName || "",
+    ...summariseForAttribute(body, rawPhone),
   };
+  if (smsE164) attributes.SMS = smsE164;
   const listIds = listIdRaw ? [Number(listIdRaw)].filter((n) => Number.isFinite(n)) : undefined;
 
   const res = await fetch("https://api.brevo.com/v3/contacts", {
