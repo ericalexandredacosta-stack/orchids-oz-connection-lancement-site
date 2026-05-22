@@ -3,8 +3,7 @@ import { Fraunces, Manrope } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { LangProvider } from "@/lib/lang-context";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import SiteChrome from "@/components/SiteChrome";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -105,9 +104,7 @@ gtag('js', new Date());
 gtag('config', 'G-DD2W0T31TL');`}
         </Script>
         <LangProvider>
-          <Navbar />
-          {children}
-          <Footer />
+          <SiteChrome>{children}</SiteChrome>
         </LangProvider>
       </body>
     </html>
