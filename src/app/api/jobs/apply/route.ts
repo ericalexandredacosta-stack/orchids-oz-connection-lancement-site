@@ -14,6 +14,7 @@ type Payload = {
   phone?: string;
   age?: number | null;
   visa?: string;
+  englishLevel?: "none" | "basic" | "intermediate" | "fluent" | "native" | "";
   hasABN?: "yes" | "no" | "";
   abnNumber?: string;
   hasWhiteCard?: "yes" | "no" | "";
@@ -32,6 +33,7 @@ const REQUIRED_FIELDS: (keyof Payload)[] = [
   "phone",
   "age",
   "visa",
+  "englishLevel",
   "hasABN",
   "hasWhiteCard",
   "hasVehicle",
@@ -57,6 +59,7 @@ function summariseForAttribute(body: Payload): Record<string, string | number | 
     JOB_LAST_SLUG: body.jobSlug || "",
     AGE: body.age ?? 0,
     VISA: body.visa || "",
+    ENGLISH_LEVEL: body.englishLevel || "",
     HAS_ABN: body.hasABN === "yes",
     ABN_NUMBER: body.abnNumber || "",
     HAS_WHITECARD: body.hasWhiteCard === "yes",

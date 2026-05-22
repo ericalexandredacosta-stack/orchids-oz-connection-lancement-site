@@ -19,6 +19,9 @@ const VISA_OPTIONS = [
   "Other",
 ];
 
+const ENGLISH_LEVELS = ["none", "basic", "intermediate", "fluent", "native"] as const;
+type EnglishLevel = (typeof ENGLISH_LEVELS)[number];
+
 const AVAILABILITY_DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 type Day = (typeof AVAILABILITY_DAYS)[number];
 
@@ -42,6 +45,7 @@ export default function JobApplicationForm({
   const [phone, setPhone] = useState("");
   const [age, setAge] = useState("");
   const [visa, setVisa] = useState("");
+  const [englishLevel, setEnglishLevel] = useState<EnglishLevel | "">("");
   const [hasABN, setHasABN] = useState<"yes" | "no" | "">("");
   const [abnNumber, setAbnNumber] = useState("");
   const [hasWhiteCard, setHasWhiteCard] = useState<"yes" | "no" | "">("");
@@ -80,6 +84,15 @@ export default function JobApplicationForm({
         age: "Âge",
         visa: "Visa actuel",
         visaPick: "Choisis ton visa",
+        englishLevel: "Niveau d'anglais",
+        englishPick: "Choisis ton niveau",
+        englishLevels: {
+          none: "Aucun ou très basique",
+          basic: "Basique (mots simples)",
+          intermediate: "Intermédiaire (conversation OK)",
+          fluent: "Courant",
+          native: "Langue maternelle",
+        } as Record<EnglishLevel, string>,
         abn: "As-tu un ABN ?",
         abnNumber: "Numéro d'ABN (optionnel)",
         whiteCard: "As-tu la White Card ?",
@@ -133,6 +146,15 @@ export default function JobApplicationForm({
         age: "Age",
         visa: "Current visa",
         visaPick: "Pick your visa",
+        englishLevel: "English level",
+        englishPick: "Pick your level",
+        englishLevels: {
+          none: "None or very basic",
+          basic: "Basic (simple words)",
+          intermediate: "Intermediate (can hold a conversation)",
+          fluent: "Fluent",
+          native: "Native speaker",
+        } as Record<EnglishLevel, string>,
         abn: "Do you have an ABN?",
         abnNumber: "ABN number (optional)",
         whiteCard: "Do you have a White Card?",
@@ -193,6 +215,7 @@ export default function JobApplicationForm({
           phone: phone.trim(),
           age: age ? Number(age) : null,
           visa,
+          englishLevel,
           hasABN,
           abnNumber: abnNumber.trim(),
           hasWhiteCard,
@@ -284,6 +307,23 @@ export default function JobApplicationForm({
             <option value="">{t.visaPick}</option>
             {VISA_OPTIONS.map((opt) => (
               <option key={opt} value={opt}>{opt}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className={labelCls} htmlFor="englishLevel">{t.englishLevel}<span className="text-[#C8643D]"> *</span></label>
+          <select
+            id="englishLevel"
+            required
+            value={englishLevel}
+            onChange={(e) => setEnglishLevel(e.target.value as EnglishLevel)}
+            className={inputCls}
+            style={{ borderColor: "rgba(30,58,74,0.15)" }}
+          >
+            <option value="">{t.englishPick}</option>
+            {ENGLISH_LEVELS.map((lvl) => (
+              <option key={lvl} value={lvl}>{t.englishLevels[lvl]}</option>
             ))}
           </select>
         </div>
