@@ -10,6 +10,7 @@ import {
   FileText, Briefcase, Building2, Smartphone, Bike, Home,
   MapPin, ShieldCheck, Languages, GraduationCap, AlertCircle, PiggyBank, FileSignature,
 } from "lucide-react";
+import { GoogleReviews } from "@/components/GoogleReviews";
 
 const heroImages = [
   { url: "https://images.unsplash.com/photo-1624138784614-87fd1b6528f8?q=80&w=1920&auto=format&fit=crop" },
@@ -847,6 +848,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ── 06b. GOOGLE REVIEWS ── */}
+      <GoogleReviews />
 
       {/* ── 07. PACKS TEASER (dark section) ── */}
       <section className="relative py-24 overflow-hidden" style={{ background: "var(--color-ocean-600)" }}>
