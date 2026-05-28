@@ -161,7 +161,7 @@ export function GoogleReviews() {
               className="font-display font-bold text-ocean-600"
               style={{ fontSize: "clamp(2rem, 3.8vw, 3rem)", letterSpacing: "-0.02em" }}
             >
-              {lang === "FR" ? "Ils sont passés par Paul." : "They came through Paul."}
+              {lang === "FR" ? "Ce qu'ils pensent d'OZ Connection." : "What they think about OZ Connection."}
             </motion.h2>
             <motion.div
               initial={{ opacity: 0, y: 14 }}

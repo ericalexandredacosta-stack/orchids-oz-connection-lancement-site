@@ -44,12 +44,12 @@ export default function ProPage() {
     { num: "01", title: "Tu contactes OZ Connection", desc: "Via WhatsApp ou email. Tu décris ton projet, les dates et le type de travail." },
     { num: "02", title: "On te présente un backpacker", desc: "On sélectionne un profil disponible, motivé et vérifié parmi notre réseau Melbourne." },
     { num: "03", title: "La mission démarre", desc: "Tu travailles directement avec le backpacker. On reste disponibles si besoin." },
-    { num: "04", title: "Tarif simple", desc: "330 AUD au total. Tu sais exactement ce que tu paies." },
+    { num: "04", title: "Tarif simple", desc: "300 AUD au total. Tu sais exactement ce que tu paies." },
   ] : [
     { num: "01", title: "You contact OZ Connection", desc: "Via WhatsApp or email. Tell us about your project, dates and type of work." },
     { num: "02", title: "We introduce a backpacker", desc: "We match an available, motivated and verified profile from our Melbourne network." },
     { num: "03", title: "The job starts", desc: "You work directly with the backpacker. We remain available if needed." },
-    { num: "04", title: "Simple pricing", desc: "$330 AUD total. You know exactly what you're paying." },
+    { num: "04", title: "Simple pricing", desc: "$300 AUD total. You know exactly what you're paying." },
   ];
 
   const benefits = isFR ? [
@@ -166,7 +166,7 @@ export default function ProPage() {
                 </p>
                 <p className="font-display font-bold leading-none mb-1 text-white"
                   style={{ fontSize: "clamp(3rem, 6vw, 4.5rem)" }}>
-                  $80
+                  $50
                 </p>
                 <p className="text-white/60 text-sm font-medium">AUD</p>
               </div>
@@ -176,8 +176,8 @@ export default function ProPage() {
           <Reveal delay={0.22}>
             <p className="text-ocean-400/40 text-xs mt-8 max-w-md mx-auto leading-relaxed">
               {isFR
-                ? "330 AUD au total pour la mission. Tu sais exactement ce que tu paies, à la confirmation."
-                : "$330 AUD total for the placement. You know exactly what you're paying, on confirmation."}
+                ? "300 AUD au total pour la mission. Tu sais exactement ce que tu paies, à la confirmation."
+                : "$300 AUD total for the placement. You know exactly what you're paying, on confirmation."}
             </p>
           </Reveal>
         </div>
